@@ -1,4 +1,10 @@
-import { FETCH_VENDOR_DETAILS_REQUEST, FETCH_VENDOR_DETAILS_SUCCESS, FETCH_VENDOR_DETAILS_FAILURE } from '../constants/vendorConstants';
+// reducers/vendorReducer.js
+import {
+  FETCH_VENDOR_DETAILS_REQUEST,
+  FETCH_VENDOR_DETAILS_SUCCESS,
+  FETCH_VENDOR_DETAILS_FAILURE,
+  SET_USER_DETAILS,
+} from '../constants/vendorConstants';
 
 const initialState = {
   vendorDetails: [],
@@ -9,25 +15,27 @@ const initialState = {
 const vendorReducer = (state = initialState, action) => {
   switch (action.type) {
     case FETCH_VENDOR_DETAILS_REQUEST:
-      console.log('Reducer: FETCH_VENDOR_DETAILS_REQUEST');
       return {
         ...state,
         loading: true,
         error: null,
       };
     case FETCH_VENDOR_DETAILS_SUCCESS:
-      console.log('Reducer: FETCH_VENDOR_DETAILS_SUCCESS', action.payload);
       return {
         ...state,
         loading: false,
         vendorDetails: action.payload,
       };
     case FETCH_VENDOR_DETAILS_FAILURE:
-      console.log('Reducer: FETCH_VENDOR_DETAILS_FAILURE', action.payload);
       return {
         ...state,
         loading: false,
         error: action.payload,
+      };
+    case SET_USER_DETAILS:
+      return {
+        ...state,
+        userDetails: action.payload,
       };
     default:
       return state;

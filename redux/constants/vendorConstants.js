@@ -1,5 +1,5 @@
-//vendorConstants.js
+// constants/vendorConstants.js
 export const FETCH_VENDOR_DETAILS_REQUEST = 'FETCH_VENDOR_DETAILS_REQUEST';
 export const FETCH_VENDOR_DETAILS_SUCCESS = 'FETCH_VENDOR_DETAILS_SUCCESS';
 export const FETCH_VENDOR_DETAILS_FAILURE = 'FETCH_VENDOR_DETAILS_FAILURE';
-
+export const SET_USER_DETAILS = 'SET_USER_DETAILS'; // Add this constant for setting user details

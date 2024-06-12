@@ -57,7 +57,7 @@ const SignInScreen = () => {
 
         if (!vendorSnapshot.empty) {
           console.log('User is a vendor');
-          navigation.navigate('Vhome');
+          navigation.navigate('Vhome', { user: user });
         } else if (!userSnapshot.empty) {
           console.log('User is a regular user');
           navigation.navigate('HomePage');
@@ -121,7 +121,7 @@ const SignInScreen = () => {
       if (!vendorSnapshot.empty) {
         // User is a vendor
         console.log('User is a vendor');
-        navigation.navigate('Vhome');
+        navigation.navigate('Vhome', { user: user });
       } else if (!userSnapshot.empty) {
         // User is a regular user
         console.log('User is a regular user');

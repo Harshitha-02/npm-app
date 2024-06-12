@@ -1,10 +1,7 @@
-// screens/vender/Vhome.js
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View } from 'react-native';
-import { HomeIcon, InventoryIcon, FeedbackIcon, ProfileIcon } from './CustomIcons'; // Adjust the path if necessary
-
-// Import your screens for Home, Inventory, Feedback, and Profile
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { HomeIcon, InventoryIcon, FeedbackIcon, ProfileIcon } from './CustomIcons';
 import HomeScreen from './HomeScreen';
 import InventoryScreen from './InventoryScreen';
 import FeedbackScreen from './FeedbackScreen';
@@ -12,9 +9,11 @@ import ProfileScreen from './ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
-const Vhome = () => {
+const Vhome = ({ route }) => {
+  const { user: routeUser } = route.params;
+  console.log("Props received by Vhome:", route);
   return (
-    <View style={{ flex: 1, backgroundColor: '#19263C' }}>
+    <View style={{ flex: 1 }}>
       <Tab.Navigator
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused, size }) => {
@@ -48,10 +47,10 @@ const Vhome = () => {
           },
         })}
       >
-        <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-        <Tab.Screen name="Inventory" component={InventoryScreen} />
-        <Tab.Screen name="Feedback" component={FeedbackScreen} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
+        <Tab.Screen name="Home" component={() => <HomeScreen user={routeUser} />} options={{ headerShown: false }} />
+        <Tab.Screen name="Inventory" component={() => <InventoryScreen user={routeUser} />} />
+        <Tab.Screen name="Feedback" component={() => <FeedbackScreen user={routeUser} />} />
+        <Tab.Screen name="Profile" component={() => <ProfileScreen user={routeUser} />} />
       </Tab.Navigator>
     </View>
   );
