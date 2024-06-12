@@ -1,7 +1,8 @@
+// screens/vender/Vhome.js
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View } from 'react-native';
-import { HomeIcon, InventoryIcon, FeedbackIcon, ProfileIcon } from './CustomIcons';
+import { HomeIcon, InventoryIcon, FeedbackIcon, ProfileIcon } from './CustomIcons'; // Adjust the path if necessary
 
 // Import your screens for Home, Inventory, Feedback, and Profile
 import HomeScreen from './HomeScreen';
@@ -31,24 +32,23 @@ const Vhome = () => {
 
             return iconComponent;
           },
-          tabBarActiveTintColor: '#4ADE80', // Active tint color
-          tabBarInactiveTintColor: 'white', // Inactive tint color
+          tabBarActiveTintColor: '#4ADE80',
+          tabBarInactiveTintColor: 'white',
           tabBarStyle: {
-            backgroundColor: '#19263C', // Background color
-            height: 80, // Adjust height here
+            backgroundColor: '#19263C',
+            height: 80,
             justifyContent: 'center',
           },
           tabBarLabelStyle: {
-            fontWeight: 'bold', 
-            marginBottom: 15, 
-            marginBottom: 15, 
+            fontWeight: 'bold',
+            marginBottom: 15,
           },
           tabBarIconStyle: {
-            marginBottom: -10, // Decrease space between icon and label
+            marginBottom: -10,
           },
         })}
       >
-        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
         <Tab.Screen name="Inventory" component={InventoryScreen} />
         <Tab.Screen name="Feedback" component={FeedbackScreen} />
         <Tab.Screen name="Profile" component={ProfileScreen} />
