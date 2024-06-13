@@ -17,6 +17,7 @@ import Vhome from './screens/vender/vhome';
 import HomePage from './screens/HomePage';
 
 import AddProductScreen from './screens/vender/AddProductScreen';
+import EditProductScreen from './screens/vender/EditProductScreen';
 // Import reducers
 import vendorReducer from './redux/reducers/vendorReducer'; // Adjust the path if necessary
 
@@ -47,6 +48,7 @@ const App = () => {
           <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
           <Stack.Screen name="Vhome" component={Vhome} options={{ headerShown: false }} />
           <Stack.Screen name="AddProductScreen" component={AddProductScreen} />
+          <Stack.Screen name="EditProductScreen" component={EditProductScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

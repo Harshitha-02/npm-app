@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ImageBackground, Image, TextInput, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-import { doc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebaseConfig'; // Ensure this path matches your actual file structure
 
 const InventoryScreen = ({ navigation, user }) => {
-  console.log("Props received by inventoryScreen:", user);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(query(collection(db, 'vendors', user.uid, 'products')), (querySnapshot) => {
+    const unsubscribe = onSnapshot(query(collection(db, `vendors/${user.uid}/products`)), (querySnapshot) => {
       const fetchedProducts = [];
       querySnapshot.forEach((doc) => {
         fetchedProducts.push({ id: doc.id, ...doc.data() });
@@ -19,18 +18,32 @@ const InventoryScreen = ({ navigation, user }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user.uid]);
 
   const navigateToAddProduct = () => {
     navigation.navigate('AddProductScreen', { user });
   };
 
+  const navigateToEditProduct = (productId) => {
+    console.log(`Product ID clicked: ${productId}`);
+    navigation.navigate('EditProductScreen', { user, productId });
+  };
+
   const renderProductItem = ({ item }) => (
     <View style={styles.productItem}>
-      <Text style={styles.productName}>{item.name}</Text>
-      <Text style={styles.productDetails}>{item.description}</Text>
-      <Text style={styles.productDetails}>Quantity: {item.quantity}</Text>
-      <Text style={styles.productDetails}>Price: ${item.price}</Text>
+      <TouchableOpacity onPress={() => {
+          console.log(`Edit button pressed for product: ${item.id}`);
+          navigateToEditProduct(item.id);
+        }}
+        style={styles.editButton}>
+        <Image source={require('../../images/edit.png')} style={styles.editIcon} />
+      </TouchableOpacity>
+      <View>
+        <Text style={styles.productName}>{item.name}</Text>
+        <Text style={styles.productDetails}>{item.description}</Text>
+        <Text style={styles.productDetails}>Quantity: {item.quantity}</Text>
+        <Text style={styles.productDetails}>Price: ${item.price}</Text>
+      </View>
     </View>
   );
 
@@ -142,6 +155,17 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
     borderRadius: 10,
+    flexDirection: 'row', // Added for aligning edit icon
+    alignItems: 'center', // Added for aligning edit icon
+  },
+  editButton: {
+    padding: 8,
+    marginRight: 10,
+  },
+  editIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#3F51B5', // Adjust color as needed
   },
   productName: {
     fontSize: 18,
