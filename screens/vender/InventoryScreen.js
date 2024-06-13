@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ImageBackground, Image, TextInput, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-import { doc,collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebaseConfig'; // Ensure this path matches your actual file structure
 
 const InventoryScreen = ({ navigation, user }) => {
@@ -8,25 +8,17 @@ const InventoryScreen = ({ navigation, user }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProducts = async () => {
-    try {
-      const vendorDocRef = doc(db, 'vendors', user.uid);  // Correct usage for document reference
-      const productsRef = collection(vendorDocRef, 'products');  // Correct usage for collection reference
-  
-      const querySnapshot = await getDocs(productsRef);
-      const fetchedProducts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  
+  useEffect(() => {
+    const unsubscribe = onSnapshot(query(collection(db, 'vendors', user.uid, 'products')), (querySnapshot) => {
+      const fetchedProducts = [];
+      querySnapshot.forEach((doc) => {
+        fetchedProducts.push({ id: doc.id, ...doc.data() });
+      });
       setProducts(fetchedProducts);
       setLoading(false);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setLoading(false); // Handle loading state appropriately
-    }
-  };
-  
+    });
 
-  useEffect(() => {
-    fetchProducts();
+    return () => unsubscribe();
   }, []);
 
   const navigateToAddProduct = () => {
