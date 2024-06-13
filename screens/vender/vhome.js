@@ -53,8 +53,12 @@ const Vhome = ({ navigation, route }) => {
         <Tab.Screen name="Inventory" options={{ headerShown: false }}>
           {() => <InventoryScreen user={routeUser} navigation={navigation} />}
         </Tab.Screen>
-        <Tab.Screen name="Feedback" component={FeedbackScreen} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
+        <Tab.Screen name="Feedback" options={{ headerShown: false }}>
+          {() => <FeedbackScreen user={routeUser} />}
+        </Tab.Screen>
+        <Tab.Screen name="Profile" >
+          {() => <ProfileScreen user={routeUser} />}
+        </Tab.Screen>
       </Tab.Navigator>
     </View>
   );
