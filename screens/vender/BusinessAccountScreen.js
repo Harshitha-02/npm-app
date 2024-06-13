@@ -5,7 +5,7 @@ import { auth, db,firebaseConfig } from '../../firebaseConfig';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { PhoneAuthProvider, signInWithCredential, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection,setDoc,doc } from 'firebase/firestore';
 
 const BusinessAccountScreen = () => {
   const [input, setInput] = useState('');
@@ -109,8 +109,8 @@ const BusinessAccountScreen = () => {
       // Determine user type (vendor)
       const userType = 'vendor';
   
-      // Add user to Firestore collection
-      await addDoc(collection(db, 'vendors'), {
+      // Add user to Firestore collection with document ID as UID
+      await setDoc(doc(db, 'vendors', userCredential.user.uid), {
         uid: userCredential.user.uid,
         email: userEmail,
         displayName: username,
@@ -118,7 +118,14 @@ const BusinessAccountScreen = () => {
       });
   
       console.log('User account created & signed in');
-      navigation.navigate('Vhome');
+      navigation.navigate('Vhome', {
+        user: {
+          uid: userCredential.user.uid,
+          email: userEmail,
+          displayName: username,
+          type: userType,
+        },
+      });
     } catch (error) {
       console.error('Error creating user account:', error);
       Alert.alert('Error', 'Failed to create user account. Please try again.');

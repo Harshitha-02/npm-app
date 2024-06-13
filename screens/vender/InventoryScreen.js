@@ -1,22 +1,63 @@
-import React from 'react';
-import { View, Text, ImageBackground, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ImageBackground, Image, TextInput, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { doc,collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../firebaseConfig'; // Ensure this path matches your actual file structure
 
-const InventoryScreen = ({ navigation }) => {
-  const navigateToAddProduct = () => {
-    navigation.navigate('AddProductScreen');
+const InventoryScreen = ({ navigation, user }) => {
+  console.log("Props received by inventoryScreen:", user);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProducts = async () => {
+    try {
+      const vendorDocRef = doc(db, 'vendors', user.uid);  // Correct usage for document reference
+      const productsRef = collection(vendorDocRef, 'products');  // Correct usage for collection reference
+  
+      const querySnapshot = await getDocs(productsRef);
+      const fetchedProducts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  
+      setProducts(fetchedProducts);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setLoading(false); // Handle loading state appropriately
+    }
   };
+  
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const navigateToAddProduct = () => {
+    navigation.navigate('AddProductScreen', { user });
+  };
+
+  const renderProductItem = ({ item }) => (
+    <View style={styles.productItem}>
+      <Text style={styles.productName}>{item.name}</Text>
+      <Text style={styles.productDetails}>{item.description}</Text>
+      <Text style={styles.productDetails}>Quantity: {item.quantity}</Text>
+      <Text style={styles.productDetails}>Price: ${item.price}</Text>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading products...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Top section with background image */}
       <View style={styles.topSection}>
         <ImageBackground source={require('../../images/homebg.png')} style={styles.backgroundImage}>
           <Image source={require('../../images/logo.png')} style={styles.logo} />
         </ImageBackground>
       </View>
 
-      {/* Search box */}
       <View style={styles.searchBox}>
         <TextInput
           placeholder="Search products..."
@@ -26,10 +67,20 @@ const InventoryScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Products section */}
       <View style={styles.productsSection}>
         <Text style={styles.productsHeading}>Products You Sell</Text>
-        {/* Add Product button */}
+
+        {products.length === 0 ? (
+          <Text>No products found.</Text>
+        ) : (
+          <FlatList
+            data={products}
+            renderItem={renderProductItem}
+            keyExtractor={(item) => item.id}
+            style={{ marginTop: 10 }}
+          />
+        )}
+
         <TouchableOpacity style={styles.addButton} onPress={navigateToAddProduct}>
           <Text style={styles.addButtonText}>Add Product</Text>
         </TouchableOpacity>
@@ -93,6 +144,20 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  productItem: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 10,
+  },
+  productName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  productDetails: {
+    fontSize: 14,
+    color: '#666',
   },
 });
 

@@ -11,7 +11,7 @@ const Tab = createBottomTabNavigator();
 
 const Vhome = ({ navigation, route }) => {
   const { user: routeUser } = route.params;
-
+  console.log('User details received in vhome:', routeUser);
   return (
     <View style={{ flex: 1 }}>
       <Tab.Navigator
