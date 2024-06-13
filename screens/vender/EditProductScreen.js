@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig'; // Ensure this path matches your actual file structure
 
 const EditProductScreen = ({ route, navigation }) => {
@@ -29,14 +29,35 @@ const EditProductScreen = ({ route, navigation }) => {
       return;
     }
 
-    const docRef = doc(db, `vendors/${user.uid}/products`, productId);
-    await updateDoc(docRef, {
-      name: product.name,
-      description: product.description,
-      quantity: product.quantity,
-      price: product.price,
-    });
-    navigation.goBack();
+    try {
+      // Update product in the vendor's products subcollection
+      const vendorDocRef = doc(db, `vendors/${user.uid}/products`, productId);
+      await updateDoc(vendorDocRef, {
+        name: product.name,
+        description: product.description,
+        quantity: product.quantity,
+        price: product.price,
+      });
+
+      console.log('Product updated in vendor\'s products subcollection.');
+
+      // Update product in the global products collection
+      const globalProductRef = doc(db, 'products', productId);
+      await setDoc(globalProductRef, {
+        name: product.name,
+        description: product.description,
+        quantity: product.quantity,
+        price: product.price,
+        vendorId: user.uid,
+      });
+
+      console.log('Product updated in global products collection.');
+
+      // Navigate back to previous screen (inventory or product list)
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error updating product:', error);
+    }
   };
 
   if (loading) {
