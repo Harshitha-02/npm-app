@@ -9,9 +9,9 @@ import ProfileScreen from './ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
-const Vhome = ({ route }) => {
+const Vhome = ({ navigation, route }) => {
   const { user: routeUser } = route.params;
-  console.log("Props received by Vhome:", route);
+
   return (
     <View style={{ flex: 1 }}>
       <Tab.Navigator
@@ -47,10 +47,14 @@ const Vhome = ({ route }) => {
           },
         })}
       >
-        <Tab.Screen name="Home" component={() => <HomeScreen user={routeUser} />} options={{ headerShown: false }} />
-        <Tab.Screen name="Inventory" component={() => <InventoryScreen user={routeUser} />} />
-        <Tab.Screen name="Feedback" component={() => <FeedbackScreen user={routeUser} />} />
-        <Tab.Screen name="Profile" component={() => <ProfileScreen user={routeUser} />} />
+        <Tab.Screen name="Home" options={{ headerShown: false }}>
+          {() => <HomeScreen user={routeUser} />}
+        </Tab.Screen>
+        <Tab.Screen name="Inventory" options={{ headerShown: false }}>
+          {() => <InventoryScreen user={routeUser} navigation={navigation} />}
+        </Tab.Screen>
+        <Tab.Screen name="Feedback" component={FeedbackScreen} />
+        <Tab.Screen name="Profile" component={ProfileScreen} />
       </Tab.Navigator>
     </View>
   );
