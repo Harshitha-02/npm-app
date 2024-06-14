@@ -14,10 +14,11 @@ import SigninScreen from './screens/SignInScreen';
 import SignupScreen from './screens/user/SignUpScreen';
 import BusinessAccountScreen from './screens/vender/BusinessAccountScreen';
 import Vhome from './screens/vender/vhome';
-import HomePage from './screens/HomePage';
+import Uhome from './screens/user/uhome';
 
 import AddProductScreen from './screens/vender/AddProductScreen';
 import EditProductScreen from './screens/vender/EditProductScreen';
+import ShopDetailsScreen from './screens/vender/ShopDetailsScreen';
 // Import reducers
 import vendorReducer from './redux/reducers/vendorReducer'; // Adjust the path if necessary
 
@@ -45,10 +46,11 @@ const App = () => {
           <Stack.Screen name="SigninScreen" component={SigninScreen} options={{ headerShown: false }} />
           <Stack.Screen name="SignupScreen" component={SignupScreen} options={{ headerShown: false }} />
           <Stack.Screen name="BusinessAccountScreen" component={BusinessAccountScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
           <Stack.Screen name="Vhome" component={Vhome} options={{ headerShown: false }} />
+          <Stack.Screen name="Uhome" component={Uhome} options={{ headerShown: false }} />
           <Stack.Screen name="AddProductScreen" component={AddProductScreen} />
           <Stack.Screen name="EditProductScreen" component={EditProductScreen} />
+          <Stack.Screen name="ShopDetailsScreen" component={ShopDetailsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

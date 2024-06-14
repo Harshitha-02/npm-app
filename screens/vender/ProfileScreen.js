@@ -4,8 +4,10 @@ import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db } from '../../firebaseConfig'; // Ensure this path matches your actual file structure
 import { updateDoc, doc } from 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
 
 const ProfileScreen = ({ user }) => {
+  const navigation = useNavigation(); 
   const [image, setImage] = useState(null);
 
   useEffect(() => {
@@ -46,7 +48,13 @@ const ProfileScreen = ({ user }) => {
   const screenHeight = Dimensions.get('window').height;
 
   const handlePress = (section) => {
-    console.log(`${section} pressed`);
+    if (section === 'My Address') {
+      console.log(`${section} pressed`);
+      console.log('User details in ProfileScreen:', user);
+      navigation.navigate('ShopDetailsScreen', { user });
+    } else {
+      console.log(`${section} pressed`);
+    }
   };
 
   return (

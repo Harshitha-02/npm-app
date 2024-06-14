@@ -60,7 +60,7 @@ const SignInScreen = () => {
           navigation.navigate('Vhome', { user: user });
         } else if (!userSnapshot.empty) {
           console.log('User is a regular user');
-          navigation.navigate('HomePage');
+          navigation.navigate('Uhome', { user: user });
         } else {
           console.log('User not found in any collection');
           Alert.alert('Error', 'User not found. Please contact support.');
@@ -125,7 +125,7 @@ const SignInScreen = () => {
       } else if (!userSnapshot.empty) {
         // User is a regular user
         console.log('User is a regular user');
-        navigation.navigate('HomePage');
+        navigation.navigate('Uhome', { user: user });
       } else {
         // User is neither in vendors nor in users collection
         console.log('User not found in any collection');

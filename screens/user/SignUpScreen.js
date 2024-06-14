@@ -116,7 +116,7 @@ const SignUpScreen = () => {
         displayName: userCredential.user.displayName
       });
   
-      navigation.navigate('HomePage');
+      navigation.navigate('Vhome', { user: user });
     } catch (error) {
       console.error('Error creating user account:', error);
       Alert.alert('Error', 'Failed to create user account. Please try again.');

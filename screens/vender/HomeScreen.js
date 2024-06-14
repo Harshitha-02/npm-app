@@ -18,7 +18,7 @@ const HomeScreen = ({ user }) => {
 
       {/* Greeting section */}
       <View style={styles.greetingSection}>
-        <Text style={[styles.greetingText, { fontWeight: 'bold' }]}>Hi {user.displayName}</Text>
+        <Text style={[styles.greetingText, { fontWeight: 'bold' }]}>Hi {user.displayName},</Text>
         <Text style={styles.welcomeText}>Welcome back!</Text>
       </View>
 
