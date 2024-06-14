@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { auth,db, firebaseConfig } from '../../firebaseConfig';
+import { auth, db, firebaseConfig } from '../../firebaseConfig';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { PhoneAuthProvider, signInWithCredential, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc,setDoc } from 'firebase/firestore';
 
 const SignUpScreen = () => {
   const [input, setInput] = useState('');
@@ -74,7 +74,6 @@ const SignUpScreen = () => {
   )}
   
 
-
   const confirmVerificationCode = async () => {
     try {
       const credential = PhoneAuthProvider.credential(verificationId, verificationCode);
@@ -109,14 +108,14 @@ const SignUpScreen = () => {
         return;
       }
   
-      // Add user to Firestore collection
-      await addDoc(collection(db, 'users'), {
+      // Add user to Firestore collection with UID as document ID
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
         uid: userCredential.user.uid,
         email: userCredential.user.email,
         displayName: userCredential.user.displayName
       });
   
-      navigation.navigate('Vhome', { user: user });
+      navigation.navigate('Uhome', { user: userCredential.user });
     } catch (error) {
       console.error('Error creating user account:', error);
       Alert.alert('Error', 'Failed to create user account. Please try again.');
