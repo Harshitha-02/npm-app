@@ -15,6 +15,7 @@ import SignupScreen from './screens/user/SignUpScreen';
 import BusinessAccountScreen from './screens/vender/BusinessAccountScreen';
 import Vhome from './screens/vender/vhome';
 import Uhome from './screens/user/uhome';
+import ProductsListScreen from './screens/user/ProductsListScreen';
 
 import AddProductScreen from './screens/vender/AddProductScreen';
 import EditProductScreen from './screens/vender/EditProductScreen';
@@ -51,6 +52,8 @@ const App = () => {
           <Stack.Screen name="AddProductScreen" component={AddProductScreen} />
           <Stack.Screen name="EditProductScreen" component={EditProductScreen} />
           <Stack.Screen name="ShopDetailsScreen" component={ShopDetailsScreen} />
+
+          <Stack.Screen name="ProductsListScreen" component={ProductsListScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

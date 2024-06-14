@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { db } from '../../firebaseConfig';
-import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc } from 'firebase/firestore';
 
 const AddProductScreen = ({ navigation, route }) => {
   const { user } = route.params;
@@ -16,32 +16,31 @@ const AddProductScreen = ({ navigation, route }) => {
     console.log('Input Values:', { name, description, quantity, price, imageURL });
 
     try {
-      // Step 1: Add product to the 'products' collection
-      const productsCollectionRef = collection(db, 'products');
-      const newProductRef = await addDoc(productsCollectionRef, {
+      // Step 1: Add product to the 'products' subcollection under vendor's document in npmshops
+      const npmshopsVendorDocRef = doc(db, 'npmshops', user.uid);
+      const npmshopsProductsCollectionRef = collection(npmshopsVendorDocRef, 'products');
+      const npmshopsNewProductRef = await addDoc(npmshopsProductsCollectionRef, {
         name,
         description,
         quantity: parseInt(quantity, 10),
         price: parseFloat(price),
         imageURL,
-        vendorId: user.uid, // Add vendorId to associate product with vendor
       });
 
-      console.log('Product added to products collection:', newProductRef.id);
+      console.log('Product added to vendor\'s products in npmshops:', npmshopsNewProductRef.id);
 
-      // Step 2: Add product to the 'products' subcollection under vendor's document
-      const vendorDocRef = doc(db, 'vendors', user.uid);
-      const vendorProductsCollectionRef = collection(vendorDocRef, 'products');
-      const vendorProductRef = await addDoc(vendorProductsCollectionRef, {
+      // Step 2: Add product to the 'products' subcollection under vendor's document in vendors
+      const vendorsVendorDocRef = doc(db, 'vendors', user.uid);
+      const vendorsProductsCollectionRef = collection(vendorsVendorDocRef, 'products');
+      const vendorsNewProductRef = await addDoc(vendorsProductsCollectionRef, {
         name,
         description,
         quantity: parseInt(quantity, 10),
         price: parseFloat(price),
         imageURL,
-        productId: newProductRef.id, // Add productId to link with product document in 'products' collection
       });
 
-      console.log('Product added to vendor\'s products:', vendorProductRef.id);
+      console.log('Product added to vendor\'s products in vendors:', vendorsNewProductRef.id);
 
       // Navigate to inventory screen after adding the product
       navigation.navigate('Inventory');

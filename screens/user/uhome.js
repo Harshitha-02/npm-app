@@ -49,7 +49,7 @@ const Uhome = ({ navigation, route }) => {
         })}
       >
         <Tab.Screen name="Home" options={{ headerShown: false }}>
-          {() => <HomeScreen user={routeUser} />}
+          {() => <HomeScreen user={routeUser} navigation={navigation} />}
         </Tab.Screen>
         <Tab.Screen name="Wishlist" options={{ headerShown: false }}>
           {() => <WishlistScreen user={routeUser} />}
