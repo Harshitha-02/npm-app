@@ -97,7 +97,6 @@ const SignInScreen = () => {
           placeholder="Email or Phone Number"
           value={input}
           onChangeText={setInput}
-          keyboardType={validatePhoneNumber(input) ? 'phone-pad' : 'email-address'}
           placeholderTextColor="#8896AB"
           style={styles.input}
         />

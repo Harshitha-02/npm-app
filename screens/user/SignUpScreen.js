@@ -7,9 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { doc, setDoc } from 'firebase/firestore';
 
 const SignUpScreen = () => {
-  const [input, setInput] = useState('');
-  const [isVerified, setIsVerified] = useState(false);
   const [username, setUsername] = useState('');
+  const [input, setInput] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
 
@@ -24,32 +23,27 @@ const SignUpScreen = () => {
     return emailRegex.test(email);
   };
 
-  const proceedToCreateAccount = () => {
-    if (validateEmail(input) || validatePhoneNumber(input)) {
-      setIsVerified(true);
-    } else {
-      Alert.alert('Invalid Input', 'Please enter a valid email or phone number.');
-    }
-  };
-
   const createUserAccount = async () => {
-    if (!username || !password) {
-      Alert.alert('Missing Information', 'Please enter a username and password.');
+    if (!username || !password || !input) {
+      Alert.alert('Missing Information', 'Please enter a username, email/phone number, and password.');
       return;
     }
 
     try {
       let userCredential;
-      if (validateEmail(input)) {
-        userCredential = await createUserWithEmailAndPassword(auth, input, password);
-      } else if (validatePhoneNumber(input)) {
-        const email = validatePhoneNumber(input) ? `${input}@example.com` : null;
-        userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      } else {
+      let userEmail = input;
+
+      if (validatePhoneNumber(input)) {
+        userEmail = `${input}@example.com`;
+      } else if (!validateEmail(input)) {
         Alert.alert('Invalid Input', 'Please enter a valid email or phone number.');
         return;
       }
 
+      // Create user account
+      userCredential = await createUserWithEmailAndPassword(auth, userEmail, password);
+
+      // Update user profile with username
       await updateProfile(userCredential.user, { displayName: username });
 
       // Add user to Firestore collection with UID as document ID
@@ -83,54 +77,45 @@ const SignUpScreen = () => {
       />
       <Text style={styles.joinCommunity}>Join our community</Text>
       <Text style={styles.startDemo}>Start your demo version</Text>
-      {!isVerified ? (
-        <>
-          <Text style={styles.text}>Email/Phone No.</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Email or Phone Number"
-              value={input}
-              onChangeText={setInput}
-              keyboardType={validatePhoneNumber(input) ? 'phone-pad' : 'email-address'}
-              placeholderTextColor="#8896AB"
-              style={styles.input}
-            />
-          </View>
-          <TouchableOpacity style={styles.button} onPress={proceedToCreateAccount}>
-            <Text style={styles.buttonText}>Next</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <Text style={styles.text}>Name</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Username"
-              value={username}
-              onChangeText={setUsername}
-              placeholderTextColor="#8896AB"
-              style={styles.input}
-            />
-          </View>
-          <Text style={styles.text}>Password</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              placeholderTextColor="#8896AB"
-              style={styles.input}
-            />
-          </View>
-          <TouchableOpacity style={styles.button} onPress={createUserAccount}>
-            <View style={styles.buttonContent}>
-              <Text style={styles.buttonText}>Sign Up</Text>
-              <Ionicons name="chevron-forward" size={20} color="#fff" />
-            </View>
-          </TouchableOpacity>
-        </>
-      )}
+
+      <Text style={styles.text}>Name</Text>
+      <View style={styles.inputContainer}>
+        <TextInput
+          placeholder="Username"
+          value={username}
+          onChangeText={setUsername}
+          placeholderTextColor="#8896AB"
+          style={styles.input}
+        />
+      </View>
+      <Text style={styles.text}>Email/Phone No.</Text>
+      <View style={styles.inputContainer}>
+        <TextInput
+          placeholder="Email or Phone Number"
+          value={input}
+          onChangeText={setInput}
+          placeholderTextColor="#8896AB"
+          style={styles.input}
+        />
+      </View>
+      <Text style={styles.text}>Password</Text>
+      <View style={styles.inputContainer}>
+        <TextInput
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          placeholderTextColor="#8896AB"
+          style={styles.input}
+        />
+      </View>
+      <TouchableOpacity style={styles.button} onPress={createUserAccount}>
+        <View style={styles.buttonContent}>
+          <Text style={styles.buttonText}>Sign Up</Text>
+          <Ionicons name="chevron-forward" size={20} color="#fff" />
+        </View>
+      </TouchableOpacity>
+
       <View style={styles.footer}>
         <Text style={styles.footerText}>Already have an account? </Text>
         <TouchableOpacity onPress={navigateToSignIn}>
