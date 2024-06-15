@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topSection: {
-    flex: 0.4,
+    flex: 0.45,
     justifyContent: 'center',
     alignItems: 'center',
   },

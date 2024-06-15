@@ -16,6 +16,7 @@ import BusinessAccountScreen from './screens/vender/BusinessAccountScreen';
 import Vhome from './screens/vender/vhome';
 import Uhome from './screens/user/uhome';
 import ProductsListScreen from './screens/user/ProductsListScreen';
+import ProductDetailsScreen from './screens/user/ProductDetailsScreen';
 
 import AddProductScreen from './screens/vender/AddProductScreen';
 import EditProductScreen from './screens/vender/EditProductScreen';
@@ -53,7 +54,8 @@ const App = () => {
           <Stack.Screen name="EditProductScreen" component={EditProductScreen} />
           <Stack.Screen name="ShopDetailsScreen" component={ShopDetailsScreen} />
 
-          <Stack.Screen name="ProductsListScreen" component={ProductsListScreen} />
+          <Stack.Screen name="ProductsListScreen" component={ProductsListScreen} options={{ headerShown: false }}/>
+          <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

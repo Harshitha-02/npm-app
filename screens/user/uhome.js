@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { HomeIcon, WishlistIcon, CartIcon, ProfileIcon } from './CustomIcons'; // Ensure you have appropriate icon components
+import { HomeIcon, WishlistIcon, CartIcon, ProfileIcon } from './CustomIcons';
 import HomeScreen from './HomeScreen';
 import WishlistScreen from './WishlistScreen';
 import CartScreen from './CartScreen';
@@ -11,7 +11,7 @@ const Tab = createBottomTabNavigator();
 
 const Uhome = ({ navigation, route }) => {
   const { user: routeUser } = route.params;
-  console.log('User details received in uhome:', routeUser);
+  console.log('User details received in Uhome:', routeUser);
 
   return (
     <View style={{ flex: 1 }}>
