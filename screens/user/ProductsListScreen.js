@@ -75,7 +75,7 @@ const ProductsListScreen = ({ navigation, route }) => {
 
   const navigateToProductDetails = (product) => {
     console.log('Navigating to ProductDetailsScreen with:', { product, user, shopId });
-    navigation.navigate('ProductDetailsScreen', { product, user, shopId });
+    navigation.navigate('ProductDetails', { product, user, shopId });
   };
 
   return (
@@ -125,6 +125,7 @@ const styles = StyleSheet.create({
   },
   productInfo: {
     flex: 1,
+    marginLeft: 10,
   },
   productName: {
     fontSize: 18,

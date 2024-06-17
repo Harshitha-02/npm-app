@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ImageBackground, Image, TextInput } from 'react-native';
+import { createStackNavigator } from '@react-navigation/stack';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebaseConfig'; // Ensure this path matches your actual file structure
+import ProductsListScreen from './ProductsListScreen';
+import ProductDetailsScreen from './ProductDetailsScreen';
 
-const HomeScreen = ({ navigation, user }) => {
+const HomeStack = createStackNavigator();
+
+const HomeScreenComponent = ({ navigation, user }) => {
   const [npmShops, setNpmShops] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -26,7 +31,7 @@ const HomeScreen = ({ navigation, user }) => {
 
   const navigateToProductsList = (shopId) => {
     console.log('Clicked shop ID:', shopId); // Log the ID of the clicked shop
-    navigation.navigate('ProductsListScreen', { shopId, user });
+    navigation.navigate('ProductsList', { shopId, user });
   };
 
   const handleSearch = () => {
@@ -81,6 +86,29 @@ const HomeScreen = ({ navigation, user }) => {
         />
       </View>
     </View>
+  );
+};
+
+const HomeScreen = ({ user }) => {
+  return (
+    <HomeStack.Navigator>
+      <HomeStack.Screen 
+        name="Home" 
+        options={{ headerShown: false }}
+      >
+        {props => <HomeScreenComponent {...props} user={user} />}
+      </HomeStack.Screen>
+      <HomeStack.Screen 
+        name="ProductsList" 
+        component={ProductsListScreen} 
+        options={{ headerShown: true }} // Ensure header is shown
+      />
+      <HomeStack.Screen 
+        name="ProductDetails" 
+        component={ProductDetailsScreen} 
+        options={{ headerShown: true }} // Ensure header is shown
+      />
+    </HomeStack.Navigator>
   );
 };
 

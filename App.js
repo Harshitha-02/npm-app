@@ -21,6 +21,8 @@ import ProductDetailsScreen from './screens/user/ProductDetailsScreen';
 import AddProductScreen from './screens/vender/AddProductScreen';
 import EditProductScreen from './screens/vender/EditProductScreen';
 import ShopDetailsScreen from './screens/vender/ShopDetailsScreen';
+
+import MyLanguageScreen from './screens/MyLanguageScreen';
 // Import reducers
 import vendorReducer from './redux/reducers/vendorReducer'; // Adjust the path if necessary
 
@@ -54,8 +56,9 @@ const App = () => {
           <Stack.Screen name="EditProductScreen" component={EditProductScreen} />
           <Stack.Screen name="ShopDetailsScreen" component={ShopDetailsScreen} />
 
-          <Stack.Screen name="ProductsListScreen" component={ProductsListScreen} options={{ headerShown: false }}/>
           <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
+
+          <Stack.Screen name="MyLanguageScreen" component={MyLanguageScreen}/>
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

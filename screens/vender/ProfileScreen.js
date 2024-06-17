@@ -39,7 +39,7 @@ const ProfileScreen = ({ user }) => {
   };
 
   const updateProfileImage = async (url) => {
-    const userRef = doc(db, 'users', user.uid); // Adjust this path according to your Firestore structure
+    const userRef = doc(db, 'vendors', user.uid); // Adjust this path according to your Firestore structure
     await updateDoc(userRef, {
       profileImage: url,
     });

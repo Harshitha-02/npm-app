@@ -1,13 +1,40 @@
 import React from 'react';
-import { View } from 'react-native';
+import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View } from 'react-native';
 import { HomeIcon, WishlistIcon, CartIcon, ProfileIcon } from './CustomIcons';
-import HomeScreen from './HomeScreen';
+import HomeScreenComponent from './HomeScreen';
 import WishlistScreen from './WishlistScreen';
 import CartScreen from './CartScreen';
 import ProfileScreen from './ProfileScreen';
+import ProductsListScreen from './ProductsListScreen';
+import ProductDetailsScreen from './ProductDetailsScreen';
 
 const Tab = createBottomTabNavigator();
+const HomeStack = createStackNavigator();
+
+const HomeScreen = ({ user }) => {
+  return (
+    <HomeStack.Navigator>
+      <HomeStack.Screen 
+        name="Home" 
+        options={{ headerShown: false }}
+      >
+        {props => <HomeScreenComponent {...props} user={user} />}
+      </HomeStack.Screen>
+      <HomeStack.Screen 
+        name="ProductsList" 
+        component={ProductsListScreen} 
+        options={{ headerShown: true }} // Ensure header is shown
+      />
+      <HomeStack.Screen 
+        name="ProductDetails" 
+        component={ProductDetailsScreen} 
+        options={{ headerShown: true }} // Ensure header is shown
+      />
+    </HomeStack.Navigator>
+  );
+};
 
 const Uhome = ({ navigation, route }) => {
   const { user: routeUser } = route.params;
@@ -49,7 +76,7 @@ const Uhome = ({ navigation, route }) => {
         })}
       >
         <Tab.Screen name="Home" options={{ headerShown: false }}>
-          {() => <HomeScreen user={routeUser} navigation={navigation} />}
+          {() => <HomeScreen user={routeUser} />}
         </Tab.Screen>
         <Tab.Screen name="Wishlist" options={{ headerShown: false }}>
           {() => <WishlistScreen user={routeUser} />}
