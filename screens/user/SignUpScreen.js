@@ -1,59 +1,87 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { auth, db } from '../../firebaseConfig';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { Ionicons } from '@expo/vector-icons';
-import { doc, setDoc } from 'firebase/firestore';
+import { auth, db, firebaseConfig } from '../../firebaseConfig';
+import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
+import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
+import { collection, doc, setDoc } from 'firebase/firestore';
 
 const SignUpScreen = () => {
-  const [username, setUsername] = useState('');
   const [input, setInput] = useState('');
+  const [verificationId, setVerificationId] = useState(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const recaptchaVerifier = useRef(null);
   const navigation = useNavigation();
 
   const validatePhoneNumber = (phone) => {
     const phoneRegex = /^\+91\d{10}$/;
-    const plainPhoneRegex = /^\d{10}$/;
-    return phoneRegex.test(phone) || plainPhoneRegex.test(phone);
+    return phoneRegex.test(phone);
   };
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const sendVerificationCode = async () => {
+    let phoneNumber = input;
 
-  const createUserAccount = async () => {
-    if (!username || !password || !input) {
-      Alert.alert('Missing Information', 'Please enter a username, email/phone number, and password.');
+    if (/^\d+$/.test(phoneNumber)) {
+      if (phoneNumber.length === 10) {
+        phoneNumber = `+91${phoneNumber}`;
+        setInput(phoneNumber);
+      } else {
+        Alert.alert('Invalid Phone Number', 'Please enter a 10-digit phone number.');
+        return;
+      }
+    }
+
+    if (!validatePhoneNumber(phoneNumber)) {
+      Alert.alert('Invalid Phone Number', 'Please enter a valid phone number in the format +911234567890.');
       return;
     }
 
     try {
-      let userCredential;
-      let userEmail = input;
+      const phoneProvider = new PhoneAuthProvider(auth);
+      const verificationId = await phoneProvider.verifyPhoneNumber(phoneNumber, recaptchaVerifier.current);
+      setVerificationId(verificationId);
+      setIsCodeSent(true);
+      console.log('Code Sent');
+    } catch (error) {
+      console.error('Error sending verification code:', error);
+      Alert.alert('Error', 'Failed to send verification code. Please try again.');
+    }
+  };
 
-      if (validatePhoneNumber(input)) {
-        userEmail = `${input}@example.com`;
-      } else if (!validateEmail(input)) {
-        Alert.alert('Invalid Input', 'Please enter a valid email or phone number.');
-        return;
-      }
+  const confirmVerificationCode = async () => {
+    try {
+      const credential = PhoneAuthProvider.credential(verificationId, verificationCode);
+      await signInWithCredential(auth, credential);
+      setIsVerified(true);
+      console.log('Phone number verified');
+    } catch (error) {
+      console.error('Error verifying verification code:', error);
+      Alert.alert('Error', 'Failed to verify verification code. Please try again.');
+    }
+  };
 
-      // Create user account
-      userCredential = await createUserWithEmailAndPassword(auth, userEmail, password);
+  const createUserAccount = async () => {
+    if (!username || !password) {
+      Alert.alert('Missing Information', 'Please enter a username and password.');
+      return;
+    }
 
-      // Update user profile with username
-      await updateProfile(userCredential.user, { displayName: username });
-
-      // Add user to Firestore collection with UID as document ID
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
-        uid: userCredential.user.uid,
-        email: validateEmail(input) ? input : null,
-        phone: validatePhoneNumber(input) ? input : null,
+    try {
+      const user = auth.currentUser;
+      const userDoc = doc(db, 'users', user.uid);
+      await setDoc(userDoc, {
+        uid: user.uid,
+        phone: user.phoneNumber,
         displayName: username,
+        password: password,
       });
 
+      console.log('User account created & details stored');
+      console.log('User UID:', user.uid);
       navigation.navigate('Uhome', { user: userCredential.user });
     } catch (error) {
       console.error('Error creating user account:', error);
@@ -71,51 +99,75 @@ const SignUpScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require('../../images/logo.png')} // Make sure to replace with the actual path to your logo
-        style={styles.logo}
-      />
+      <FirebaseRecaptchaVerifierModal ref={recaptchaVerifier} firebaseConfig={firebaseConfig} />
+      <Image source={require('../../images/logo.png')} style={styles.logo} />
       <Text style={styles.joinCommunity}>Join our community</Text>
       <Text style={styles.startDemo}>Start your demo version</Text>
-
-      <Text style={styles.text}>Name</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-          placeholderTextColor="#8896AB"
-          style={styles.input}
-        />
-      </View>
-      <Text style={styles.text}>Email/Phone No.</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Email or Phone Number"
-          value={input}
-          onChangeText={setInput}
-          placeholderTextColor="#8896AB"
-          style={styles.input}
-        />
-      </View>
-      <Text style={styles.text}>Password</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholderTextColor="#8896AB"
-          style={styles.input}
-        />
-      </View>
-      <TouchableOpacity style={styles.button} onPress={createUserAccount}>
-        <View style={styles.buttonContent}>
-          <Text style={styles.buttonText}>Sign Up</Text>
-          <Ionicons name="chevron-forward" size={20} color="#fff" />
-        </View>
-      </TouchableOpacity>
-
+      {!isVerified ? (
+        <>
+          <Text style={styles.text}>Email/Phone No.</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="Email or Phone Number"
+              value={input}
+              onChangeText={setInput}
+              placeholderTextColor="#8896AB"
+              style={styles.input}
+            />
+          </View>
+          <Text style={styles.infoText}>If you're using a phone number, please make sure to add +91 before the number.</Text>
+          {validatePhoneNumber(input) ? (
+            <TouchableOpacity style={styles.button} onPress={sendVerificationCode}>
+              <Text style={styles.buttonText}>Send Code</Text>
+            </TouchableOpacity>
+          ) : null}
+          {isCodeSent && (
+            <>
+              <Text style={styles.text}>Enter verification code:</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  placeholder="Verification code"
+                  value={verificationCode}
+                  onChangeText={setVerificationCode}
+                  keyboardType="number-pad"
+                  placeholderTextColor="#8896AB"
+                  style={styles.input}
+                />
+              </View>
+              <TouchableOpacity style={styles.button} onPress={confirmVerificationCode}>
+                <Text style={styles.buttonText}>Verify Code</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <Text style={styles.text}>Name</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="Username"
+              value={username}
+              onChangeText={setUsername}
+              placeholderTextColor="#8896AB"
+              style={styles.input}
+            />
+          </View>
+          <Text style={styles.text}>Password</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholderTextColor="#8896AB"
+              style={styles.input}
+            />
+          </View>
+          <TouchableOpacity style={styles.button} onPress={createUserAccount}>
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+        </>
+      )}
       <View style={styles.footer}>
         <Text style={styles.footerText}>Already have an account? </Text>
         <TouchableOpacity onPress={navigateToSignIn}>
@@ -170,7 +222,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    marginTop: 40,
+    marginTop:40,
     backgroundColor: '#22C55E',
     padding: 13,
     borderRadius: 5,
@@ -207,7 +259,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'left',
     marginBottom: 30,
-  },
+  },  
 });
 
-export default SignUpScreen;
+export default SignUpScreen; 

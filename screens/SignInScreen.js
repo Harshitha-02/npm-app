@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db, firebaseConfig } from '../firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
+import { PhoneAuthProvider, signInWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const SignInScreen = () => {
   const [input, setInput] = useState('');
   const [password, setPassword] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationId, setVerificationId] = useState(null);
+  const [isPhone, setIsPhone] = useState(false);
   const navigation = useNavigation();
+  const recaptchaVerifier = useRef(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => {
@@ -18,8 +23,7 @@ const SignInScreen = () => {
 
   const validatePhoneNumber = (phone) => {
     const phoneRegex = /^\+91\d{10}$/;
-    const plainPhoneRegex = /^\d{10}$/;
-    return phoneRegex.test(phone) || plainPhoneRegex.test(phone);
+    return phoneRegex.test(phone);
   };
 
   const validateEmail = (email) => {
@@ -28,19 +32,69 @@ const SignInScreen = () => {
   };
 
   const handleSignIn = async () => {
-    let email = input;
+    if (validateEmail(input)) {
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, input, password);
+        const user = userCredential.user;
+        console.log('Signed in user:', user);
 
-    if (validatePhoneNumber(input)) {
-      email = `${input}@example.com`;
-    } else if (!validateEmail(input)) {
+        const userId = user.uid;
+        console.log('User ID (UID):', userId);
+
+        const vendorsRef = collection(db, 'vendors');
+        const usersRef = collection(db, 'users');
+
+        const vendorQuery = query(vendorsRef, where('uid', '==', userId));
+        const userQuery = query(usersRef, where('uid', '==', userId));
+
+        console.log('Querying vendors collection...');
+        const vendorSnapshot = await getDocs(vendorQuery);
+        console.log('Vendor snapshot:', vendorSnapshot.docs.map(doc => doc.data()));
+
+        console.log('Querying users collection...');
+        const userSnapshot = await getDocs(userQuery);
+        console.log('User snapshot:', userSnapshot.docs.map(doc => doc.data()));
+
+        if (!vendorSnapshot.empty) {
+          console.log('User is a vendor');
+          navigation.navigate('Vhome', { user: userCredential.user });
+        } else if (!userSnapshot.empty) {
+          console.log('User is a regular user');
+          navigation.navigate('Uhome', { user: userCredential.user });
+        } else {
+          console.log('User not found in any collection');
+          Alert.alert('Error', 'User not found. Please contact support.');
+        }
+      } catch (error) {
+        console.error('Sign in error:', error);
+        Alert.alert('Error', 'Failed to sign in. Please check your email and password.');
+      }
+    } else if (validatePhoneNumber(input)) {
+      setIsPhone(true);
+      sendVerificationCode();
+    } else {
       Alert.alert('Invalid Input', 'Please enter a valid email or phone number.');
-      return;
     }
+  };
 
+  const sendVerificationCode = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const phoneProvider = new PhoneAuthProvider(auth);
+      const verificationId = await phoneProvider.verifyPhoneNumber(input, recaptchaVerifier.current);
+      setVerificationId(verificationId);
+      Alert.alert('Code Sent', 'Please check your phone for the verification code.');
+    } catch (error) {
+      console.error('Error sending verification code:', error);
+      Alert.alert('Error', 'Failed to send verification code. Please try again.');
+    }
+  };
+
+  const confirmVerificationCode = async () => {
+    try {
+      const credential = PhoneAuthProvider.credential(verificationId, verificationCode);
+      const userCredential = await signInWithCredential(auth, credential);
       const user = userCredential.user;
-      console.log('Signed in user:', user);
+      console.log('Phone number verified and user signed in');
 
       const userId = user.uid;
       console.log('User ID (UID):', userId);
@@ -61,74 +115,99 @@ const SignInScreen = () => {
 
       if (!vendorSnapshot.empty) {
         console.log('User is a vendor');
-        navigation.navigate('Vhome', { user: user });
+        navigation.navigate('Vhome', { user: userCredential.user });
       } else if (!userSnapshot.empty) {
         console.log('User is a regular user');
-        navigation.navigate('Uhome', { user: user });
+        navigation.navigate('Uhome', { user: userCredential.user });
       } else {
         console.log('User not found in any collection');
         Alert.alert('Error', 'User not found. Please contact support.');
       }
     } catch (error) {
-      console.error('Sign in error:', error);
-      Alert.alert('Error', 'Failed to sign in. Please check your email and password.');
+      console.error('Error verifying verification code:', error);
+      Alert.alert('Error', 'Failed to verify verification code. Please try again.');
     }
   };
 
   const navigateToSignUp = () => {
-    navigation.navigate('SignupScreen'); // Corrected screen name
+    navigation.navigate('SignupScreen');
   };
 
   const navigateToForgotPassword = () => {
-    navigation.navigate('ForgotPasswordScreen'); // Add navigation to Forgot Password screen
+    navigation.navigate('ForgotPasswordScreen');
   };
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require('../images/logo.png')} // Make sure to replace with the actual path to your logo
-        style={styles.logo}
-      />
+      <FirebaseRecaptchaVerifierModal ref={recaptchaVerifier} firebaseConfig={firebaseConfig} />
+      <Image source={require('../images/logo.png')} style={styles.logo} />
       <Text style={styles.title}>Sign in to your account</Text>
       <Text style={styles.subtitle}>Start your journey with our product</Text>
-      <Text style={styles.text}>Email/Phone No.</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Email or Phone Number"
-          value={input}
-          onChangeText={setInput}
-          placeholderTextColor="#8896AB"
-          style={styles.input}
-        />
-      </View>
-      <Text style={styles.text}>Password:</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          secureTextEntry={!showPassword}
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Password"
-          placeholderTextColor="#8896AB"
-          style={styles.input}
-        />
-        <TouchableOpacity onPress={toggleShowPassword} style={styles.eyeIconContainer}>
-          <Ionicons
-            name={showPassword ? 'eye-off' : 'eye'}
-            size={24}
-            color="#8896AB"
-            style={styles.eyeIcon}
-          />
-        </TouchableOpacity>
-      </View>
-      <TouchableOpacity onPress={navigateToForgotPassword}>
-        <Text style={styles.forgotPassword}>Forgot password?</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-        <View style={styles.buttonContent}>
-          <Text style={styles.buttonText}>Sign In</Text>
-          <Ionicons name="chevron-forward" size={20} color="#fff" />
-        </View>
-      </TouchableOpacity>
+      {!isPhone ? (
+        <>
+          <Text style={styles.text}>Email/Phone No.</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="Email or Phone Number"
+              value={input}
+              onChangeText={setInput}
+              keyboardType={validatePhoneNumber(input) ? 'phone-pad' : 'email-address'}
+              placeholderTextColor="#8896AB"
+              style={styles.input}
+            />
+          </View>
+          {!validatePhoneNumber(input) && (
+            <>
+              <Text style={styles.text}>Password:</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Password"
+                  placeholderTextColor="#8896AB"
+                  style={styles.input}
+                />
+                <TouchableOpacity onPress={toggleShowPassword} style={styles.eyeIconContainer}>
+                  <Ionicons
+                    name={showPassword ? 'eye-off' : 'eye'}
+                    size={24}
+                    color="#8896AB"
+                    style={styles.eyeIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity onPress={navigateToForgotPassword}>
+                <Text style={styles.forgotPassword}>Forgot password?</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+            <View style={styles.buttonContent}>
+              <Text style={styles.buttonText}>Sign In</Text>
+              <Ionicons name="chevron-forward" size={20} color="#fff" />
+            </View>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <Text style={styles.text}>Enter verification code:</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="Verification code"
+              value={verificationCode}
+              onChangeText={setVerificationCode}
+              keyboardType="number-pad"
+              placeholderTextColor="#8896AB"
+              style={styles.input}
+            />
+          </View>
+          <TouchableOpacity style={styles.button} onPress={confirmVerificationCode}>
+            <Text style={styles.buttonText}>Verify Code</Text>
+          </TouchableOpacity>
+        </>
+      )}
       <View style={styles.footer}>
         <Text style={styles.footerText}>Don't have an account? </Text>
         <TouchableOpacity onPress={navigateToSignUp}>
