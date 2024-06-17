@@ -3,8 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Image } fro
 import { useNavigation } from '@react-navigation/native';
 import { auth, db, firebaseConfig } from '../../firebaseConfig';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { PhoneAuthProvider, signInWithCredential, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { setDoc, doc } from 'firebase/firestore';
 
 const SignUpScreen = () => {
   const [input, setInput] = useState('');
@@ -72,8 +72,10 @@ const SignUpScreen = () => {
 
     try {
       const user = auth.currentUser;
-      const userDoc = doc(db, 'users', user.uid);
-      await setDoc(userDoc, {
+      await updateProfile(user, { displayName: username });
+      
+      // Add user to Firestore collection with document ID as UID
+      await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         phone: user.phoneNumber,
         displayName: username,
@@ -82,10 +84,46 @@ const SignUpScreen = () => {
 
       console.log('User account created & details stored');
       console.log('User UID:', user.uid);
-      navigation.navigate('Uhome', { user: userCredential.user });
+      navigation.navigate('Uhome', { user });
     } catch (error) {
       console.error('Error creating user account:', error);
       Alert.alert('Error', 'Failed to create user account. Please try again.');
+    }
+  };
+
+  const createEmailAccount = async () => {
+    if (!username || !password) {
+      Alert.alert('Missing Information', 'Please enter a username and password.');
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, input, password);
+      const user = userCredential.user;
+      await updateProfile(user, { displayName: username });
+      
+      // Add user to Firestore collection with document ID as UID
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        email: user.email,
+        displayName: username,
+        password: password,
+      });
+
+      console.log('User account created & details stored');
+      console.log('User UID:', user.uid);
+      navigation.navigate('Uhome', { user });
+    } catch (error) {
+      console.error('Error creating email account:', error);
+      Alert.alert('Error', 'Failed to create email account. Please try again.');
+    }
+  };
+
+  const handleNext = () => {
+    if (validatePhoneNumber(input)) {
+      sendVerificationCode();
+    } else {
+      setIsVerified(true); // Proceed directly to entering name and password for email registration
     }
   };
 
@@ -116,11 +154,9 @@ const SignUpScreen = () => {
             />
           </View>
           <Text style={styles.infoText}>If you're using a phone number, please make sure to add +91 before the number.</Text>
-          {validatePhoneNumber(input) ? (
-            <TouchableOpacity style={styles.button} onPress={sendVerificationCode}>
-              <Text style={styles.buttonText}>Send Code</Text>
-            </TouchableOpacity>
-          ) : null}
+          <TouchableOpacity style={styles.button} onPress={handleNext}>
+            <Text style={styles.buttonText}>Next</Text>
+          </TouchableOpacity>
           {isCodeSent && (
             <>
               <Text style={styles.text}>Enter verification code:</Text>
@@ -163,7 +199,10 @@ const SignUpScreen = () => {
               style={styles.input}
             />
           </View>
-          <TouchableOpacity style={styles.button} onPress={createUserAccount}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={validatePhoneNumber(input) ? createUserAccount : createEmailAccount}
+          >
             <Text style={styles.buttonText}>Sign Up</Text>
           </TouchableOpacity>
         </>
@@ -222,7 +261,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    marginTop:40,
+    marginTop: 40,
     backgroundColor: '#22C55E',
     padding: 13,
     borderRadius: 5,
@@ -233,10 +272,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   footer: {
     flexDirection: 'row',
@@ -259,7 +294,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'left',
     marginBottom: 30,
-  },  
+  },
 });
 
-export default SignUpScreen; 
+export default SignUpScreen;
