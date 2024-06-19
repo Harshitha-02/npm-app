@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, Dimensions, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db } from '../../firebaseConfig'; // Ensure this path matches your actual file structure
-import { updateDoc, doc } from 'firebase/firestore';
+import { db } from '../../firebaseConfig'; // Adjust this path according to your actual file structure
+import { updateDoc, doc, setDoc } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
+import { auth } from '../../firebaseConfig'; // Import auth from your firebaseConfig
 
 const ProfileScreen = ({ user }) => {
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
   const [image, setImage] = useState(null);
 
   useEffect(() => {
@@ -15,36 +16,75 @@ const ProfileScreen = ({ user }) => {
   }, [user]);
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+    console.log('Opening image picker...');
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      setImage(result.uri);
-      uploadImage(result.uri);
+      console.log('Image picker result:', result);
+
+      if (!result.cancelled) {
+        const uri = result.assets[0].uri;
+        console.log('Image picked:', uri);
+        setImage(uri); // Update state with the picked image URI
+        uploadImage(uri); // Pass URI to upload function
+      } else {
+        console.log('Image picking cancelled');
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
     }
   };
 
   const uploadImage = async (uri) => {
-    const storage = getStorage();
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    const storageRef = ref(storage, `profile_images/${user.uid}`);
-    await uploadBytes(storageRef, blob);
-    const downloadURL = await getDownloadURL(storageRef);
-    updateProfileImage(downloadURL);
+    console.log('Uploading image:', uri);
+
+    try {
+      const storage = getStorage();
+      const response = await fetch(uri);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+
+      const blob = await response.blob();
+      console.log('Blob created:', blob);
+
+      // Upload to vendors/useruid/shopImage
+      const vendorsRef = doc(db, 'vendors', user.uid);
+      await setDoc(vendorsRef, { shopImage: uri }, { merge: true });
+      console.log('Shop Image URL updated in vendors collection');
+
+      // Upload to npm_shops/useruid/shopImage
+      const npmShopsRef = doc(db, 'npmshops', user.uid);
+      await setDoc(npmShopsRef, { shopImage: uri }, { merge: true });
+      console.log('Shop Image URL updated in npm_shops collection');
+
+      Alert.alert('Success', 'Shop image uploaded successfully.');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', 'Failed to upload shop image. Please try again.');
+    }
   };
 
-  const updateProfileImage = async (url) => {
-    const userRef = doc(db, 'vendors', user.uid); // Adjust this path according to your Firestore structure
-    await updateDoc(userRef, {
-      profileImage: url,
-    });
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      console.log('User logged out successfully');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'SigninScreen' }],
+      });
+    } catch (error) {
+      console.error('Error logging out:', error);
+      Alert.alert('Logout Failed', 'Failed to log out. Please try again.');
+    }
   };
-
+  
   const screenHeight = Dimensions.get('window').height;
 
   const handlePress = (section) => {
@@ -52,6 +92,10 @@ const ProfileScreen = ({ user }) => {
       console.log(`${section} pressed`);
       console.log('User details in ProfileScreen:', user);
       navigation.navigate('ShopDetailsScreen', { user });
+    } else if (section === 'My Language') {
+      navigation.navigate('MyLanguageScreen');
+    } else if (section === 'Logout') {
+      handleLogout();
     } else {
       console.log(`${section} pressed`);
     }
@@ -68,7 +112,7 @@ const ProfileScreen = ({ user }) => {
               <Text style={styles.imagePlaceholder}>+</Text>
             )}
             <Image
-              source={require('../../images/pen.png')} // Ensure this path matches your actual file structure
+              source={require('../../images/pen.png')} // Adjust this path according to your actual file structure
               style={styles.penIcon}
             />
           </TouchableOpacity>
@@ -80,7 +124,7 @@ const ProfileScreen = ({ user }) => {
           <TouchableOpacity key={section} style={styles.section} onPress={() => handlePress(section)}>
             <Text style={styles.sectionText}>{section}</Text>
             <Image
-              source={require('../../images/arrow.png')} // Ensure this path matches your actual file structure
+              source={require('../../images/arrow.png')} // Adjust this path according to your actual file structure
               style={styles.arrowIcon}
             />
           </TouchableOpacity>

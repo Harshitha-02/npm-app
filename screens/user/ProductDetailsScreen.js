@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, Button, StyleSheet, Alert, Image } from 'react-native';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 
@@ -26,6 +26,7 @@ const ProductDetailsScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
+      <Image source={{ uri: product.imageURL }} style={styles.image} />
       <Text style={styles.heading}>{product.name}</Text>
       <Text style={styles.description}>{product.description}</Text>
       <Text style={styles.price}>Price: ${product.price}</Text>
@@ -39,6 +40,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F0F0F0',
     padding: 20,
+    alignItems: 'center',
+  },
+  image: {
+    width: '100%',
+    height: 300, // Adjust height as needed
+    resizeMode: 'cover',
+    marginBottom: 20,
   },
   heading: {
     fontSize: 24,
@@ -49,6 +57,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#888888',
     marginBottom: 10,
+    textAlign: 'center',
   },
   price: {
     fontSize: 20,

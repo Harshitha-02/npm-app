@@ -79,8 +79,27 @@ const HomeScreenComponent = ({ navigation, user }) => {
               style={styles.shopItem}
               onPress={() => navigateToProductsList(item.id)}
             >
-              <Text style={styles.shopName}>{item.shopName}</Text>
-              <Text style={styles.shopAddress}>{item.shopAddress}</Text>
+              <ImageBackground
+                source={require('../../images/shopdefault_shop.png')} // Replace with your actual shop background image
+                style={styles.bgImageItem}
+                resizeMode="cover"
+              >
+                <View style={styles.shopDetails}>
+                  <Text style={styles.shopName}>{item.shopName}</Text>
+                  <Text style={styles.shopAddress}>{item.shopAddress}</Text>
+                </View>
+                {item.shopImage ? (
+                  <Image
+                    source={{ uri: item.shopImage }}
+                    style={styles.shopImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={[styles.shopImage, { backgroundColor: '#C8C8C8', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Image source={require('../../images/shopdefault_shop.png')} style={{ width: 80, height: 80 }} resizeMode="cover" />
+                  </View>
+                )}
+              </ImageBackground>
             </TouchableOpacity>
           )}
         />
@@ -177,11 +196,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   shopItem: {
+    marginBottom: 20,
+  },
+  bgImageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 15,
-    marginBottom: 10,
     elevation: 3,
+  },
+  shopDetails: {
+    flex: 1,
   },
   shopName: {
     fontSize: 16,
@@ -190,6 +216,12 @@ const styles = StyleSheet.create({
   shopAddress: {
     fontSize: 14,
     color: '#888888',
+  },
+  shopImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    marginLeft: 10,
   },
 });
 

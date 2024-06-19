@@ -39,6 +39,17 @@ const InventoryScreen = ({ navigation, user }) => {
         <Image source={require('../../images/edit.png')} style={styles.editIcon} />
       </TouchableOpacity>
       <View>
+        {item.imageURL ? (
+          <Image
+            source={{ uri: item.imageURL }}
+            style={styles.productImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.noImageContainer}>
+            <Text>No Product Image</Text>
+          </View>
+        )}
         <Text style={styles.productName}>{item.name}</Text>
         <Text style={styles.productDetails}>{item.description}</Text>
         <Text style={styles.productDetails}>Quantity: {item.quantity}</Text>
@@ -46,6 +57,8 @@ const InventoryScreen = ({ navigation, user }) => {
       </View>
     </View>
   );
+  
+  
 
   if (loading) {
     return (
@@ -127,6 +140,11 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
+  },
+  productImage: {
+    width: 100, // Adjust width and height as needed
+    height: 100,
+    borderRadius: 10,
   },
   productsSection: {
     flex: 1,
