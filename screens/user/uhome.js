@@ -1,6 +1,6 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { View } from 'react-native';
 import { HomeIcon, WishlistIcon, CartIcon, ProfileIcon } from './CustomIcons';
 import HomeScreenComponent from './HomeScreen';
@@ -9,11 +9,17 @@ import CartScreen from './CartScreen';
 import ProfileScreen from './ProfileScreen';
 import ProductsListScreen from './ProductsListScreen';
 import ProductDetailsScreen from './ProductDetailsScreen';
+import AddressScreen from './AddressScreen';
+import MyOrdersScreen from './MyOrdersScreen';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
 
-const HomeScreen = ({ user }) => {
+const HomeStackScreen = ({ user, navigation }) => {
+  console.log('HomeStackScreen received user:', user);
+  console.log('HomeStackScreen navigation:', navigation);
+
   return (
     <HomeStack.Navigator>
       <HomeStack.Screen 
@@ -24,21 +30,44 @@ const HomeScreen = ({ user }) => {
       </HomeStack.Screen>
       <HomeStack.Screen 
         name="ProductsList" 
-        component={ProductsListScreen} 
-        options={{ headerShown: true }} // Ensure header is shown
+        component={ProductsListScreen}
+        options={{ headerShown: false }} 
       />
       <HomeStack.Screen 
         name="ProductDetails" 
         component={ProductDetailsScreen} 
-        options={{ headerShown: true }} // Ensure header is shown
+        options={{ headerShown: true }} // Ensure header is shown for ProductDetails
       />
     </HomeStack.Navigator>
   );
 };
 
+const ProfileStackScreen = ({ user }) => (
+  <ProfileStack.Navigator>
+    <ProfileStack.Screen 
+      name="Profile" 
+      component={ProfileScreen} 
+      options={{ headerShown: false }} 
+      initialParams={{ user }}
+    />
+    <ProfileStack.Screen 
+      name="MyOrders" 
+      component={MyOrdersScreen} 
+      options={{ title: 'My Orders', headerShown: true }} 
+    />
+    <ProfileStack.Screen 
+      name="Address" 
+      component={AddressScreen} 
+      options={{ title: 'My Address', headerShown: true }} 
+    />
+  </ProfileStack.Navigator>
+);
+
+
 const Uhome = ({ navigation, route }) => {
   const { user: routeUser } = route.params;
-  console.log('User details received in Uhome:', routeUser);
+  console.log('Uhome received user:', routeUser);
+  console.log('Uhome navigation:', navigation);
 
   return (
     <View style={{ flex: 1 }}>
@@ -76,7 +105,7 @@ const Uhome = ({ navigation, route }) => {
         })}
       >
         <Tab.Screen name="Home" options={{ headerShown: false }}>
-          {() => <HomeScreen user={routeUser} />}
+          {() => <HomeStackScreen user={routeUser} />}
         </Tab.Screen>
         <Tab.Screen name="Wishlist" options={{ headerShown: false }}>
           {() => <WishlistScreen user={routeUser} />}
@@ -84,7 +113,7 @@ const Uhome = ({ navigation, route }) => {
         <Tab.Screen name="Cart" options={{ headerShown: false }}>
           {() => <CartScreen user={routeUser} />}
         </Tab.Screen>
-        <Tab.Screen name="Profile" options={{ headerShown: false }}>
+        <Tab.Screen name="Profile" >
           {() => <ProfileScreen user={routeUser} />}
         </Tab.Screen>
       </Tab.Navigator>

@@ -1,11 +1,13 @@
-import React from 'react';
-import { View, Text, Button, StyleSheet, Alert, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Button, StyleSheet, Alert, Image, TextInput } from 'react-native';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 
 const ProductDetailsScreen = ({ route, navigation }) => {
   const { product, user, shopId } = route.params;
   console.log('ProductDetailsScreen received props:', { product, user, shopId });
+
+  const [quantity, setQuantity] = useState(1); // State to manage quantity input
 
   const addToCart = async () => {
     try {
@@ -16,6 +18,8 @@ const ProductDetailsScreen = ({ route, navigation }) => {
         description: product.description,
         price: product.price,
         shopId: shopId,
+        quantity: parseInt(quantity), // Convert quantity to number
+        imageURL: product.imageURL, // Include imageURL in the cart item
       });
       Alert.alert('Added to cart', 'The product has been added to your cart.');
     } catch (error) {
@@ -30,6 +34,15 @@ const ProductDetailsScreen = ({ route, navigation }) => {
       <Text style={styles.heading}>{product.name}</Text>
       <Text style={styles.description}>{product.description}</Text>
       <Text style={styles.price}>Price: ${product.price}</Text>
+      <View style={styles.quantityContainer}>
+        <Text style={styles.quantityText}>Quantity:</Text>
+        <TextInput
+          style={styles.quantityInput}
+          keyboardType="numeric"
+          value={quantity.toString()}
+          onChangeText={(text) => setQuantity(text)}
+        />
+      </View>
       <Button title="Add to Cart" onPress={addToCart} />
     </View>
   );
@@ -64,6 +77,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4ADE80',
     marginBottom: 20,
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  quantityText: {
+    fontSize: 18,
+    marginRight: 10,
+  },
+  quantityInput: {
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
+    borderRadius: 5,
+    padding: 8,
+    width: 50,
+    textAlign: 'center',
   },
 });
 

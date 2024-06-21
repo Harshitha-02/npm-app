@@ -56,8 +56,6 @@ const App = () => {
           <Stack.Screen name="EditProductScreen" component={EditProductScreen} />
           <Stack.Screen name="ShopDetailsScreen" component={ShopDetailsScreen} />
 
-          <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
-
           <Stack.Screen name="MyLanguageScreen" component={MyLanguageScreen}/>
         </Stack.Navigator>
       </NavigationContainer>

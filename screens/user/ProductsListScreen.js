@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, TextInput, Dimensions } from 'react-native';
 import { collection, getDocs, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -91,25 +91,27 @@ const ProductsListScreen = ({ navigation, route }) => {
         <TouchableOpacity onPress={() => toggleWishlist(item.id)} style={styles.iconContainer}>
           <Icon
             name={wishlist.includes(item.id) ? 'heart' : 'heart-o'}
-            size={20}
-            color={wishlist.includes(item.id) ? 'red' : 'black'}
+            size={21}
+            color={wishlist.includes(item.id) ? '#4ADE80' : 'black'}
           />
         </TouchableOpacity>
       </View>
       <View style={styles.productDetails}>
         <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productDescription}>{item.description}</Text>
         <Text style={styles.productPrice}>Price: ${item.price}</Text>
         <TouchableOpacity style={styles.cartIconContainer}>
-          <Icon name="shopping-cart" size={20} color="#000" />
+          <Icon name="shopping-cart" size={21} color="black" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Products</Text>
+    <View style={styles.mainContainer}>
+      <TextInput 
+        style={styles.searchBox}
+        placeholder="Search products..."
+      />
       <FlatList
         data={products}
         keyExtractor={(item) => item.id}
@@ -122,17 +124,26 @@ const ProductsListScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     backgroundColor: '#F0F0F0',
     paddingHorizontal: 10,
-    paddingTop: 20,
+    paddingTop: 40, // Increased padding top for header
   },
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
     alignSelf: 'center',
+  },
+  searchBox: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+    backgroundColor: '#fff',
   },
   productList: {
     flexGrow: 1,
@@ -141,11 +152,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap', // Wrap items to the next row when needed
   },
   productItem: {
-    width: '50%', // Each item takes 50% of the screen width
-    backgroundColor: 'white',
-    borderRadius: 10,
-    elevation: 3,
-    marginVertical: 10,
+    width: width / 2 - 20, // Each item takes 50% of the screen width minus margin
+    margin: 5, // Adds space around the item
+    borderWidth: 1, // Lighter border
+    borderColor: '#ccc', // Light grey border color
   },
   imageContainer: {
     position: 'relative',
@@ -153,6 +163,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    margin: 7, // Adds space around the image
   },
   productImage: {
     width: '100%',
@@ -163,21 +174,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     padding: 5,
     borderRadius: 20,
   },
   productDetails: {
-    padding: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5, // Reduce vertical padding
   },
   productName: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  productDescription: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 5,
   },
   productPrice: {
     fontSize: 16,
@@ -188,8 +194,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 10,
     right: 10,
-    backgroundColor: '#4ADE80',
-    padding: 8,
+    backgroundColor: 'transparent',
+    padding: 10,
     borderRadius: 20,
   },
 });
