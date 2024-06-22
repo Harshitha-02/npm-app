@@ -1,17 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
-import { collection, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, deleteDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
 import { db } from '../../firebaseConfig';
 
 const CartScreen = ({ user }) => {
+  const navigation = useNavigation();
+
   const [cartItems, setCartItems] = useState([]);
   const [selectedItemIds, setSelectedItemIds] = useState([]);
   const [itemQuantities, setItemQuantities] = useState({});
   const [totalAmount, setTotalAmount] = useState(0);
+  const [userAddress, setUserAddress] = useState(''); // State to hold user's address
 
   useEffect(() => {
     const unsubscribe = listenToCartChanges();
     console.log('User details received in CartScreen:', user);
+
+    // Fetch user's address
+    fetchUserAddress();
 
     // Clean up subscription on unmount
     return () => unsubscribe();
@@ -19,7 +26,7 @@ const CartScreen = ({ user }) => {
 
   useEffect(() => {
     calculateTotalAmount();
-  }, [itemQuantities]); // Recalculate total amount when itemQuantities change
+  }, [itemQuantities, cartItems, selectedItemIds]); // Recalculate total amount when itemQuantities, cartItems, or selectedItemIds change
 
   const listenToCartChanges = () => {
     const cartRef = collection(db, `users/${user.uid}/cart`);
@@ -31,20 +38,44 @@ const CartScreen = ({ user }) => {
       const initialSelectedIds = [];
       const initialQuantities = {};
       updatedCartItems.forEach(item => {
-        initialSelectedIds.push(item.id);
         initialQuantities[item.id] = item.quantity || 1; // Default quantity to 1 if not defined
+        if (selectedItemIds.includes(item.id)) {
+          initialSelectedIds.push(item.id);
+        }
       });
       setSelectedItemIds(initialSelectedIds);
       setItemQuantities(initialQuantities);
     });
   };
 
-  const toggleItemSelection = (itemId) => {
-    if (selectedItemIds.includes(itemId)) {
-      setSelectedItemIds(prevState => prevState.filter(id => id !== itemId));
-    } else {
-      setSelectedItemIds(prevState => [...prevState, itemId]);
+  const fetchUserAddress = async () => {
+    try {
+      const docRef = doc(db, `users/${user.uid}`);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const { city, country, district, floor, houseNumber, postalCode, state, street } = userData.address;
+
+        // Construct the formatted address
+        const formattedAddress = `${houseNumber}, ${street}, ${district}, ${city}, ${state}, ${country} - ${postalCode}`;
+        setUserAddress(formattedAddress);
+      } else {
+        console.log('No such document!');
+      }
+    } catch (error) {
+      console.error('Error fetching user address:', error);
     }
+  };
+
+  const toggleItemSelection = (itemId) => {
+    setSelectedItemIds(prevState => {
+      if (prevState.includes(itemId)) {
+        return prevState.filter(id => id !== itemId);
+      } else {
+        return [...prevState, itemId];
+      }
+    });
   };
 
   const updateQuantity = async (itemId, newQuantity) => {
@@ -58,9 +89,6 @@ const CartScreen = ({ user }) => {
       // Update in Firestore
       const itemRef = doc(db, `users/${user.uid}/cart`, itemId);
       await updateDoc(itemRef, { quantity: newQuantity });
-
-      // Recalculate total amount
-      calculateTotalAmount();
     } catch (error) {
       console.error('Error updating quantity:', error);
       Alert.alert('Error', 'Failed to update quantity.');
@@ -89,9 +117,13 @@ const CartScreen = ({ user }) => {
   };
 
   const handleProceed = () => {
-    // Implement your logic to proceed with the order
-    console.log('Proceed button pressed');
-    // Example: Navigation logic or API call to place order
+    // Navigate to OrderReview screen
+    navigation.navigate('OrderReview', {
+      cartItems: cartItems.filter(item => selectedItemIds.includes(item.id)),
+      totalAmount: totalAmount,
+      userAddress: userAddress, // Pass the fetched user address to OrderReview screen
+      deliveryTime: '1 hour' // Example delivery time
+    });
   };
 
   return (
@@ -127,7 +159,6 @@ const CartScreen = ({ user }) => {
               <View style={styles.itemDetails}>
                 <Text style={styles.itemName}>{item.name}</Text>
                 <Text style={styles.itemPrice}>Price: ${item.price}</Text>
-                <Text style={styles.itemDescription}>Quantity: {itemQuantities[item.id]}</Text>
                 {selectedItemIds.includes(item.id) && (
                   <View style={styles.selectionDetails}>
                     <View style={styles.quantityContainer}>
@@ -155,11 +186,10 @@ const CartScreen = ({ user }) => {
           )}
         />
         <View style={styles.footer}>
-          <Text style={styles.totalText}>Total Amount: ${totalAmount}</Text>
+          <Text style={styles.totalText}>Total Amount: ${totalAmount.toFixed(2)}</Text>
           {/* Proceed button */}
           <TouchableOpacity style={styles.proceedButton} onPress={handleProceed}>
-            <Text style={styles.proceedButtonText}>Proceed</Text>
-            <Image source={require('../../images/arrow.png')} style={styles.arrowIcon} />
+            <Text style={styles.proceedButtonText}>Proceed to Review</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -251,11 +281,6 @@ const styles = StyleSheet.create({
     color: '#4ADE80',
     marginBottom: 5,
   },
-  itemDescription: {
-    fontSize: 14,
-    color: '#888888',
-    marginBottom: 5,
-  },
   selectionDetails: {
     marginTop: 10,
   },
@@ -280,17 +305,6 @@ const styles = StyleSheet.create({
     color: '#888888',
     marginTop: 5,
   },
-  removeButton: {
-    backgroundColor: '#FF6347', // Red color for remove button
-    padding: 8,
-    borderRadius: 5,
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  removeButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
   emptyCartText: {
     fontSize: 18,
     textAlign: 'center',
@@ -308,10 +322,9 @@ const styles = StyleSheet.create({
   },
   proceedButton: {
     backgroundColor: '#4ADE80',
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 15,
     borderRadius: 5,
     marginTop: 10,
   },
@@ -319,12 +332,6 @@ const styles = StyleSheet.create({
     color: 'black',
     fontWeight: 'bold',
     fontSize: 18,
-    marginRight: 10,
-  },
-  arrowIcon: {
-    width: 20,
-    height: 13,
-    tintColor: 'black',
   },
 });
 

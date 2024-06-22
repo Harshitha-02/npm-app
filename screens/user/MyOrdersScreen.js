@@ -1,12 +1,10 @@
-// AddressScreen.js
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 const MyOrdersScreen = () => {
   return (
     <View style={styles.container}>
-      <Text>Address Screen</Text>
-      {/* Add your address-related components here */}
+      <Text style={styles.text}>This is the My Orders Screen</Text>
     </View>
   );
 };
@@ -16,6 +14,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  text: {
+    fontSize: 20,
   },
 });
 

@@ -1,7 +1,8 @@
+// ProfileScreen.js
+
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { updateDoc, doc } from 'firebase/firestore';
 import { auth } from '../../firebaseConfig';
 
 const ProfileScreen = ({ user }) => {
@@ -27,15 +28,13 @@ const ProfileScreen = ({ user }) => {
 
   const handlePress = (section) => {
     if (section === 'My Address') {
-      console.log(`${section} pressed`);
-      navigation.navigate('AddressScreen');
-      console.log('User details in ProfileScreen:', user);
+      navigation.navigate('Address', { user }); // Pass user object here
+    } else if (section === 'My Orders') {
+      navigation.navigate('MyOrders');
     } else if (section === 'My Language') {
       navigation.navigate('MyLanguageScreen');
     } else if (section === 'Logout') {
       handleLogout();
-    } else {
-      console.log(`${section} pressed`);
     }
   };
 
