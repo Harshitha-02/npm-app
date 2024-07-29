@@ -25,7 +25,7 @@ const HomeStackScreen = ({ user }) => {
   return (
     <HomeStack.Navigator>
       <HomeStack.Screen
-        name="Home"
+        name="UHome"
         options={{ headerShown: false }}
       >
         {props => <HomeScreenComponent {...props} user={user} />}

@@ -62,69 +62,107 @@ const ShopDetailsScreen = () => {
         Alert.alert('Permission to access location was denied');
         return;
       }
-
+  
       const location = await Location.getCurrentPositionAsync({});
       const geocode = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       });
-
+  
       console.log('Geocode data:', geocode);
-
+  
       if (geocode.length > 0) {
-        const { street, city, region, postalCode, country, district } = geocode[0];
-
-        setStreet(street || '');
+        const { street: geoStreet, city, region, postalCode, country, district } = geocode[0];
+  
+        // Set state with geocode values if not already provided
+        setStreet(street || geoStreet || '');
         setCity(city || '');
         setRegion(region || '');
         setPostalCode(postalCode || '');
         setCountry(country || '');
-        setLocality(district || '');
-
+        setLocality(locality || district || '');
+  
         // Set formatted address
-        const formattedAddr = `${street || ''}, ${district || ''}, ${city || ''}, ${region || ''}, ${postalCode || ''}, ${country || ''}`;
+        const formattedAddr = [
+          street || geoStreet || '',
+          locality || district || '',
+          city || '',
+          region || '',
+          postalCode || '',
+          country || ''
+        ].filter(part => part).join(', ');
+        
         setFormattedAddress(formattedAddr);
-
         setShopAddress(formattedAddr);
       }
     } catch (error) {
       console.error('Error getting location:', error);
     }
   };
-
+  
   const updateShopDetails = async () => {
     try {
       if (!user || !user.uid) {
         console.error('User information is missing or invalid');
         return;
       }
-
+  
+      // Get current location
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+  
+      // Reverse geocode to get address details
+      const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
+  
+      let formattedAddr = '';
+      if (geocode.length > 0) {
+        const { street: geoStreet, city, region, postalCode, country, district } = geocode[0];
+        formattedAddr = [
+          street || geoStreet || '',
+          locality || district || '',
+          city || '',
+          region || '',
+          postalCode || '',
+          country || ''
+        ].filter(part => part).join(', ');
+      } else {
+        // If no geocode data, use user inputs
+        formattedAddr = [
+          street,
+          locality,
+          city,
+          region,
+          postalCode,
+          country
+        ].filter(part => part).join(', ');
+      }
+  
       // Update or add to npmshops collection
       const npmShopsCollectionRef = doc(db, 'npmshops', user.uid);
       await setDoc(npmShopsCollectionRef, {
         vendorId: user.uid,
-        userName: user.displayName, // Store the user's name
+        userName: user.displayName,
         shopName,
-        shopAddress,
+        shopAddress: formattedAddr,
         street,
         city,
         region,
         postalCode,
         country,
         locality,
-        formattedAddress, // Save formatted address to Firestore
+        formattedAddress: formattedAddr,
+        latitude,
+        longitude,
       });
-
-      // Log the details to console
-      console.log('Shop details:', { shopName, shopAddress, userName: user.displayName, formattedAddress });
-
-      // Navigate back to ProfileScreen
+  
+      console.log('Shop details:', { shopName, shopAddress: formattedAddr, userName: user.displayName, latitude, longitude });
       navigation.goBack();
     } catch (error) {
       console.error('Error updating shop details:', error);
     }
   };
-
+  
+  
   const handleEdit = async () => {
     setIsEditing(true);
     await getLocation(); // Get location when edit button is clicked

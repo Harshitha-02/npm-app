@@ -98,7 +98,7 @@ const ProductsListScreen = ({ navigation, route }) => {
       </View>
       <View style={styles.productDetails}>
         <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>Price: ${item.price}</Text>
+        <Text style={styles.productPrice}>Price: Rs{item.price}</Text>
         <TouchableOpacity style={styles.cartIconContainer}>
           <Icon name="shopping-cart" size={21} color="black" />
         </TouchableOpacity>

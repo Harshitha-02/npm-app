@@ -188,14 +188,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     marginTop: 20,
-    flexGrow: 1,
-    height: '50%',
+
   },
   section: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
+    paddingVertical: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#2C3E50',
   },

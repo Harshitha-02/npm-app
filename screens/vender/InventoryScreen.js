@@ -5,7 +5,9 @@ import { db } from '../../firebaseConfig'; // Ensure this path matches your actu
 
 const InventoryScreen = ({ navigation, user }) => {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const unsubscribe = onSnapshot(query(collection(db, `vendors/${user.uid}/products`)), (querySnapshot) => {
@@ -14,11 +16,23 @@ const InventoryScreen = ({ navigation, user }) => {
         fetchedProducts.push({ id: doc.id, ...doc.data() });
       });
       setProducts(fetchedProducts);
+      setFilteredProducts(fetchedProducts);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, [user.uid]);
+
+  useEffect(() => {
+    if (searchQuery) {
+      const filtered = products.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts(products);
+    }
+  }, [searchQuery, products]);
 
   const navigateToAddProduct = () => {
     navigation.navigate('AddProductScreen', { user });
@@ -31,13 +45,6 @@ const InventoryScreen = ({ navigation, user }) => {
 
   const renderProductItem = ({ item }) => (
     <View style={styles.productItem}>
-      <TouchableOpacity onPress={() => {
-          console.log(`Edit button pressed for product: ${item.id}`);
-          navigateToEditProduct(item.id);
-        }}
-        style={styles.editButton}>
-        <Image source={require('../../images/edit.png')} style={styles.editIcon} />
-      </TouchableOpacity>
       <View>
         {item.imageURL ? (
           <Image
@@ -51,14 +58,27 @@ const InventoryScreen = ({ navigation, user }) => {
           </View>
         )}
         <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productDetails}>{item.description}</Text>
-        <Text style={styles.productDetails}>Quantity: {item.quantity}</Text>
-        <Text style={styles.productDetails}>Price: ${item.price}</Text>
+        <Text style={styles.productDetails}>Rs.{item.price}</Text>
       </View>
+      <TouchableOpacity onPress={() => {
+          console.log(`Edit button pressed for product: ${item.id}`);
+          navigateToEditProduct(item.id);
+        }}
+        style={styles.editButton}>
+        <Image source={require('../../images/edit.png')} style={styles.editIcon} />
+      </TouchableOpacity>
     </View>
   );
-  
-  
+
+  const renderProductRow = ({ item }) => (
+    <View style={styles.productRow}>
+      {item.map((product, index) => (
+        <View key={index} style={styles.productContainer}>
+          {renderProductItem({ item: product })}
+        </View>
+      ))}
+    </View>
+  );
 
   if (loading) {
     return (
@@ -66,6 +86,11 @@ const InventoryScreen = ({ navigation, user }) => {
         <Text>Loading products...</Text>
       </View>
     );
+  }
+
+  const groupedProducts = [];
+  for (let i = 0; i < filteredProducts.length; i += 2) {
+    groupedProducts.push(filteredProducts.slice(i, i + 2));
   }
 
   return (
@@ -77,24 +102,27 @@ const InventoryScreen = ({ navigation, user }) => {
       </View>
 
       <View style={styles.searchBox}>
+        <Image source={require('../../images/search.png')} style={styles.searchIcon} />
         <TextInput
           placeholder="Search products..."
           style={styles.searchInput}
           placeholderTextColor="#999"
           underlineColorAndroid="transparent"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
       </View>
 
       <View style={styles.productsSection}>
         <Text style={styles.productsHeading}>Products You Sell</Text>
 
-        {products.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <Text>No products found.</Text>
         ) : (
           <FlatList
-            data={products}
-            renderItem={renderProductItem}
-            keyExtractor={(item) => item.id}
+            data={groupedProducts}
+            renderItem={renderProductRow}
+            keyExtractor={(item, index) => index.toString()}
             style={{ marginTop: 10 }}
           />
         )}
@@ -137,13 +165,21 @@ const styles = StyleSheet.create({
     borderColor: '#CCCCCC',
     borderRadius: 10,
   },
+  searchIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+    marginTop: 3,
+    marginLeft: -5,
+    tintColor: '#999',
+  },
   searchInput: {
     flex: 1,
     fontSize: 16,
   },
   productImage: {
-    width: 100, // Adjust width and height as needed
-    height: 100,
+    width: 130,
+    height: 170,
     borderRadius: 10,
   },
   productsSection: {
@@ -154,44 +190,69 @@ const styles = StyleSheet.create({
   productsHeading: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10,
   },
   addButton: {
-    backgroundColor: '#3F51B5',
+    backgroundColor: '#4ADE80',
     paddingVertical: 12,
     borderRadius: 10,
     marginTop: 10,
     alignItems: 'center',
   },
   addButtonText: {
-    color: 'white',
+    color: 'black',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'semibold',
+  },
+  productRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  productContainer: {
+    flex: 1,
+    maxWidth: '49.5%', // Adjust as needed to avoid stretching
   },
   productItem: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#fff',
     padding: 10,
     marginBottom: 10,
     borderRadius: 10,
-    flexDirection: 'row', // Added for aligning edit icon
-    alignItems: 'center', // Added for aligning edit icon
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    position: 'relative',
+    height: 240,
+    width: 155,
   },
   editButton: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
     padding: 8,
-    marginRight: 10,
   },
   editIcon: {
     width: 20,
     height: 20,
-    tintColor: '#3F51B5', // Adjust color as needed
+    tintColor: '#3A3A3A',
   },
   productName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    textAlign: 'left',
+    marginVertical: 5,
   },
   productDetails: {
     fontSize: 14,
     color: '#666',
+    textAlign: 'left',
+  },
+  noImageContainer: {
+    width: 130,
+    height: 170,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ddd',
   },
 });
 
