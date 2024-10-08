@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, ImageBackground, Image, Dimensions } from 'react-native';
 import { collection, getDocs, doc, setDoc, deleteDoc, getDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../firebaseConfig'; // Adjust path as per your actual file structure
-import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming FontAwesome icons are used
+import { db } from '../../firebaseConfig';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
+const { width, height } = Dimensions.get('window');
 
 const WishlistScreen = ({ user }) => {
   const [wishlistProducts, setWishlistProducts] = useState([]);
@@ -39,8 +41,6 @@ const WishlistScreen = ({ user }) => {
         await deleteDoc(wishlistDocRef);
         console.log('Removed from wishlist:', productId);
       } else {
-        // Here you would add the product details to the wishlist subcollection
-        // This example assumes the product details are available elsewhere and added directly
         const productToAdd = { productId, name: 'Sample Product', description: 'Sample Description', price: 10.0 };
         await setDoc(wishlistDocRef, productToAdd);
         console.log('Added to wishlist:', productId);
@@ -60,27 +60,47 @@ const WishlistScreen = ({ user }) => {
 
   return (
     <View style={styles.container}>
+      <ImageBackground
+        source={require('../../images/homebg.png')}
+        style={styles.bgImage}
+        resizeMode="cover"
+      >
+        <View style={styles.topSection}>
+          <Image
+            source={require('../../images/logo.png')}
+            style={styles.logo}
+          />
+        </View>
+      </ImageBackground>
+      <Text style={styles.greeting}>Your Wishlist</Text>
       {wishlistProducts.length === 0 ? (
         <Text style={styles.text}>Your wishlist is empty.</Text>
       ) : (
         <FlatList
           data={wishlistProducts}
           keyExtractor={(item) => item.id}
+          numColumns={2} // Set number of columns
+          key={(wishlistProducts.length % 2).toString()} // Force a fresh render when numColumns changes
           renderItem={({ item }) => (
             <View style={styles.productItem}>
-              <TouchableOpacity onPress={() => toggleWishlist(item.id)}>
+              <TouchableOpacity style={styles.heartIcon} onPress={() => toggleWishlist(item.id)}>
                 <Icon
                   name={wishlistProducts.some(product => product.id === item.id) ? 'heart' : 'heart-o'}
                   size={30}
-                  color={wishlistProducts.some(product => product.id === item.id) ? 'red' : 'black'}
+                  color={wishlistProducts.some(product => product.id === item.id) ? '#4ADE80' : 'black'}
                 />
               </TouchableOpacity>
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={styles.productImage}
+              />
               <View style={styles.productInfo}>
                 <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.productDescription}>{item.description}</Text>
-                <Text style={styles.productPrice}>Price: ${item.price}</Text>
-                {/* Render other product details here */}
+                <Text style={styles.productPrice}>Rs.{item.price}</Text>
               </View>
+              <TouchableOpacity style={styles.cartIcon}>
+                <Icon name="shopping-cart" size={30} color="black" />
+              </TouchableOpacity>
             </View>
           )}
         />
@@ -94,41 +114,83 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F0F0F0',
   },
+  bgImage: {
+    height: height * 0.21, // Set height to 21% of the screen height
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topSection: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+    marginTop: 40,
+  },
+  logo: {
+    width: 70,
+    height: 70,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginLeft: 20,
+  },
   centered: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   text: {
-    fontSize: 20,
+    fontSize: 16,
     textAlign: 'center',
     marginTop: 20,
   },
   productItem: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
+    padding: 10,
+    margin: 10,
     elevation: 3,
+    width: width / 2 - 20, // Adjust width to fit two columns
+    height: 220, // Adjust height to match the dimension used in ProductsListScreen
+    position: 'relative',
+    backgroundColor: '#fff',
   },
   productInfo: {
-    flex: 1,
-    marginLeft: 10,
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-end',
+    width: '80%',
+    padding: 5,
   },
   productName: {
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  productDescription: {
-    fontSize: 14,
-    color: '#888888',
-    marginBottom: 5,
+    color: 'black',
   },
   productPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#4ADE80',
+    color: 'black',
+  },
+  productImage: {
+    width: '100%',
+    height: 150,
+  },
+  heartIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+  },
+  cartIcon: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'transparent',
+    padding: 10,
+    borderRadius: 20,
   },
 });
 

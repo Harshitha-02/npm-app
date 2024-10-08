@@ -1,38 +1,60 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
-// import RazorpayCheckout from 'react-native-razorpay';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { db, auth } from '../../firebaseConfig';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
-const OrderReviewScreen = ({ route, navigation }) => {
-  const { cartItems, totalAmount, userAddress, deliveryTime } = route.params;
+const OrderReviewScreen = ({ route }) => {
+  console.log(route);
+  const navigation = useNavigation();
+  const { cartItems, totalAmount, userAddress, deliveryTime, user } = route.params;
+  console.log(user);
 
   const handleProceedToPayment = () => {
-    // Implement your logic to proceed with payment
-    navigation.navigate('PaymentScreen');
-    // Example: API call or navigation to payment gateway
-    // var options = {
-    //   description: 'Credits towards consultation',
-    //   image: 'https://i.imgur.com/3g7nmJC.jpg',
-    //   currency: 'INR',
-    //   key: '<YOUR_KEY_ID>',
-    //   amount: '5000',
-    //   name: 'Acme Corp',
-    //   order_id: 'order_DslnoIgkIDL8Zt',//Replace this with an order_id created using Orders API.
-    //   prefill: {
-    //     email: 'gaurav.kumar@example.com',
-    //     contact: '9191919191',
-    //     name: 'Gaurav Kumar'
-    //   },
-    //   theme: { color: '#53a20e' }
-    // }
-    // RazorpayCheckout.open(options).then((data) => {
-    //   // handle success
-    //   alert(`Success: ${data.razorpay_payment_id}`);
-    // }).catch((error) => {
-    //   // handle failure
-    //   alert(`Error: ${error.code} | ${error.description}`);
-    // });
-  }
+    Alert.alert(
+      "Order Confirmation",
+      "You have selected Cash on Delivery. Your order will be processed, and payment will be collected upon delivery.",
+      [
+        {
+          text: "OK",
+          onPress: async () => {  // Mark this as async
+            try {
+              const userId = user.uid; // Use the user prop passed from CartScreen
 
+              const orderData = {
+                cartItems: cartItems,
+                totalAmount: totalAmount,
+                userAddress: userAddress,
+                deliveryTime: deliveryTime,
+                orderDate: Timestamp.now(),
+                status: 'Pending', // Add status field
+              };
+
+              // Reference to the user's orders collection
+              const ordersRef = collection(db, 'users', userId, 'orders');
+
+              // Add a new order document
+              await addDoc(ordersRef, orderData); // Await is valid now
+
+              console.log('Order successfully added to Firestore');
+              
+              // navigate to order confirmed page 
+              navigation.navigate('OrderConfirmedScreen', { totalAmount, userAddress, deliveryTime });
+
+              // and storing the orders in database
+
+              // then notify the vendor that a new order is placed from their shop
+              console.log('Order confirmed with Cash on Delivery');
+              
+            } catch (error) {
+              console.error('Error adding order to Firestore: ', error);
+              Alert.alert('Error', 'An error occurred while placing your order. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -41,7 +63,6 @@ const OrderReviewScreen = ({ route, navigation }) => {
       </View>
 
       <View style={styles.contentContainer}>
-        {/* Display selected items */}
         <FlatList
           data={cartItems}
           keyExtractor={(item) => item.id}
@@ -49,21 +70,19 @@ const OrderReviewScreen = ({ route, navigation }) => {
             <View style={styles.itemContainer}>
               <Text style={styles.itemName}>{item.name}</Text>
               <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
-              <Text style={styles.itemPrice}>Price: ${item.price}</Text>
+              <Text style={styles.itemPrice}>Price: ₹{item.price}</Text>
             </View>
           )}
         />
 
-        {/* Display total amount, user address, and delivery time */}
         <View style={styles.orderDetails}>
-          <Text style={styles.totalText}>Total Amount: ${totalAmount}</Text>
+          <Text style={styles.totalText}>Total Amount: ₹{totalAmount}</Text>
           <Text style={styles.deliveryText}>Delivery Address: {userAddress}</Text>
           <Text style={styles.deliveryText}>Estimated Delivery Time: {deliveryTime}</Text>
         </View>
 
-        {/* Proceed to Payment button */}
         <TouchableOpacity style={styles.proceedButton} onPress={handleProceedToPayment}>
-          <Text style={styles.proceedButtonText}>Proceed to Payment</Text>
+          <Text style={styles.proceedButtonText}>Confirm Order (Cash on Delivery)</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -96,29 +115,23 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
-    elevation: 3,
   },
   itemName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5,
   },
   itemQuantity: {
-    fontSize: 16,
-    color: '#888888',
-    marginBottom: 5,
+    fontSize: 14,
   },
   itemPrice: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4ADE80',
-    marginBottom: 5,
+    fontSize: 14,
+    color: 'green',
   },
   orderDetails: {
     marginTop: 20,
   },
   totalText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
   },
@@ -127,17 +140,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   proceedButton: {
-    backgroundColor: '#4ADE80',
+    backgroundColor: '#53a20e',
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
-    borderRadius: 5,
     marginTop: 20,
   },
   proceedButtonText: {
-    color: 'black',
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
-    fontSize: 18,
   },
 });
 

@@ -122,7 +122,8 @@ const CartScreen = ({ user }) => {
       cartItems: cartItems.filter(item => selectedItemIds.includes(item.id)),
       totalAmount: totalAmount,
       userAddress: userAddress, // Pass the fetched user address to OrderReview screen
-      deliveryTime: '1 hour' // Example delivery time
+      deliveryTime: '1 hour', // Example delivery time
+      user: user, // Pass the user object to the OrderReview screen
     });
   };
 

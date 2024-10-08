@@ -67,6 +67,7 @@ const ProductsListScreen = ({ navigation, route }) => {
             name: productData.name,
             description: productData.description,
             price: productData.price,
+            imageUrl: productData.imageURL,
           });
           setWishlist([...wishlist, productId]);
           console.log('Added to wishlist:', productId);

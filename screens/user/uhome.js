@@ -15,6 +15,9 @@ import AddressScreen from './AddressScreen';
 import MyOrdersScreen from './MyOrdersScreen';
 import OrderReviewScreen from './OrderReview'; // Import OrderReviewScreen here
 import PaymentScreen from './PaymentScreen';
+import WebViewScreen from './WebViewScreen';
+import OrderConfirmedScreen from './OrderConfirmedScreen';
+import OrderDetailsScreen from './OrderDetailsScreen';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createStackNavigator();
@@ -47,7 +50,7 @@ const HomeStackScreen = ({ user }) => {
 const ProfileStackScreen = ({ user }) => (
   <ProfileStack.Navigator>
     <ProfileStack.Screen
-      name="Profile"
+      name="ProfileScreen"
     >
       {props => <ProfileScreen {...props} user={user} />}
     </ProfileStack.Screen>
@@ -55,6 +58,11 @@ const ProfileStackScreen = ({ user }) => (
       name="MyOrders"
       component={MyOrdersScreen}
       options={{ title: 'My Orders', headerShown: true }}
+    />
+    <ProfileStack.Screen
+      name="OrderDetailsScreen"
+      component={OrderDetailsScreen}
+      options={{ title: 'Order Details', headerShown: true }}
     />
     <ProfileStack.Screen
       name="Address"
@@ -68,7 +76,7 @@ const ProfileStackScreen = ({ user }) => (
 const CartStackScreen = ({ user }) => (
   <CartStack.Navigator>
     <CartStack.Screen
-      name="Cart"
+      name="CartScreen"
       options={{ headerShown: false }} 
     >
       {props => <CartScreen {...props} user={user} />}
@@ -80,9 +88,19 @@ const CartStackScreen = ({ user }) => (
       options={{ title: 'Order Review', headerShown: false }}
     />
     <CartStack.Screen
+      name="OrderConfirmedScreen"
+      component={OrderConfirmedScreen}
+      options={{headerShown: false }}
+    />
+    <CartStack.Screen
       name="PaymentScreen"
       component={PaymentScreen}
       options={{ title: 'Payment', headerShown: false }}
+    />
+    <CartStack.Screen
+      name="WebViewScreen"
+      component={WebViewScreen}
+      options={{ title: 'WebViewScreen', headerShown: false }}
     />
   </CartStack.Navigator>
 );
